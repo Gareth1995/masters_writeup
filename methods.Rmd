@@ -1,0 +1,433 @@
+---
+title: " "
+output: pdf_document
+---
+
+```{r method_setup, echo=FALSE, message=FALSE, warning = FALSE}
+# knitr::opts_chunk$set(echo = FALSE)
+# knitr::opts_chunk$set(message = FALSE)
+# knitr::opts_chunk$set(results = 'hide')
+# knitr::opts_chunk$set(warning = FALSE)
+# 
+# library(dplyr)
+# library(ggplot2)
+# setwd("D:/Thesis/birdie")
+# # load relevant data
+# load('data/robertsDB.RData')
+# load('data/barberspan.counts.RData')
+# 
+# birdcnts <- bp_counts[,1:103]
+# 
+# # counting all the observations with 0 count
+# barbernas <- apply(birdcnts, 2, function(x){
+#   return(x==0)
+# })
+# barbernas
+# 
+# barber0s = apply(barbernas, 2, sum, na.rm = T) # sum the number of 0 counts per bird
+# less13 = names(barber0s[barber0s>19]) # extract names of the birds with 13 or more counts
+# 
+# #df <- robertsDB %>% select(everything())
+# newRobert <- robertsDB[!robertsDB$SppRef %in% less13,] # extract only species with 13 or more counts
+# 
+# # separate into resident and migrant
+# resid <- newRobert %>%
+#   filter(Migrant=="n") %>%
+#   select(SppRef)
+# 
+# migid <- newRobert %>%
+#   filter(Migrant=="y") %>%
+#   select(SppRef)
+# 
+# residents <- birdcnts[,resid$SppRef]
+# migrants <- birdcnts[,migid$SppRef]
+```
+
+# Methods
+
+## Study Area
+
+The Barberspan wetland is a protected wetland site known as the Barberspan Bird Sanctuary. It is located in the North West province of South Africa. The 3200ha reserve is centred on a shallow lake that covers about 257 to 2000ha of the reserve, depending on rainfall [@remisiewiczStatusMigrantResident2011]. The Barberspan wetland is placed on an inland African flyway. As a result, it is a popular stopover location for intra-African and Eurasian migrant waders and waterbirds.
+
+According to RAMSAR reports, the wetland regularly supports approximately 20000 waterbirds with 365 different bird species recorded at the Barberspan wetland [@rothmanjBarberspan2015]. Barberspan is an important location for the migratory waterbirds that it supports. For this reason, it is one of the first RAMSAR sites in South Africa and the only RAMSAR site in the North West province. It also provides ideal conditions for bird watching and is thus a popular location for bird watchers.
+
+Barberspan supports thousands of Little Stints and Curlew Sandpipers. It’s also a popular location for intra-African nomadic waders such as the Kittlitz’s Plover and Crowned Lapwing. The more common species of the wetland include the Red-Knobbed Coot, Egyptian Goose, Yellow Billed Duck, Southern Pochard and the South African Shelduck [@remisiewiczStatusMigrantResident2011]. Appendix A contains further information regarding the waterbirds in Barberspan that were used in the analysis.
+
+Barberspan is a well-protected wetland, home to many different waterbird species and rich in bird count data. As a result, it has been adopted by the BIRDIE project as its pilot site for the construction of its data pipeline and is the focus of this study.
+\newpage
+
+## Exploratory Data Analysis
+
+The data used in this dissertation comes from the Coordinated Waterbird Counts (CWAC) initiative. Counts are conducted twice a year, once every six months. One count in January/February (austral summer) and the other in June/July (austral winter). The counting procedure is standardised for each site with a rigorous set of instructions to follow. The counting procedure, however, could not be standardised across wetlands due to differing wetland sizes and terrains. Protocol ensures that each counting session should take place at, more or less, the same time of day, when the sun is either behind or beside the counter, for ideal visibility. The CWAC datasets can be obtained from the CWAC API (http://api.adu.org.za/cwac/). 
+
+The CWAC dataset contains counts from the year 1993 to 2018 for the Barberspan wetland. The original dataset omitted the years without counts. These years were inserted into the dataset as missing values. This was done for the sake of completeness and for the benefit of the state-space models. A time series of combined waterbird counts in the Barberspan wetland can be seen in figure 2.
+
+Only waterbirds with 13 or more non-zero counts were used in the analysis. It was found that the variance parameters for the SSM didn't converge when applied to waterbird counts with fewer than 13 non-zero counts. 
+
+```{r EDA4, echo=FALSE}
+
+# REPLACE 0 VALUES WITH NA VALUES IN THE COUNT DATA TO SHOW MISSED COUNTS
+
+# ADD FIGURE DESCRIPTION TO IMAGES
+
+# sum up resident and migrant counts for each year
+# combining residents
+# totalres <- apply(residents, 1, sum, na.rm = T)
+# totalres <- as.data.frame(cbind('counts' = totalres,
+#                           'Years' = bp_counts$Year,
+#                           'Season' = as.factor(bp_counts$Season)))
+# 
+# totalres$Season <- as.factor(totalres$Season)
+# levels(totalres$Season) <- c("Summer", "Winter")
+# 
+# # convert 0 values to NA values
+# totalres$counts[totalres$counts==0] <- NA
+# 
+# # plotting the residents
+# ggplot(totalres, aes(x=Years)) +
+#   geom_line(aes(y=counts)) +
+#   geom_point(aes(y=counts)) +
+#   facet_grid(rows = vars(Season)) +
+#   labs(title = "Resident Counts",
+#        y = "Combined Counts") +
+# 
+#   scale_x_continuous("Years",
+#                      labels = as.character(totalres$Year),
+#                      breaks = as.numeric(totalres$Year)) +
+#   theme(axis.text.x = element_text(angle = 90))
+# 
+# # combining migrants
+# totalmig <- apply(migrants, 1, sum, na.rm = T)
+# totalmig <- as.data.frame(cbind("counts"=totalmig,
+#                                  "Years"=bp_counts$Year,
+#                                  "Season"=as.factor(bp_counts$Season)))
+# 
+# totalmig$Season <- as.factor(totalmig$Season)
+# levels(totalmig$Season) <- c("Summer", "Winter")
+# 
+# # convert 0 values to NA values
+# totalmig$counts[totalmig$counts==0] <- NA
+# 
+# # plotting the migrants
+# ggplot(totalmig, aes(x=Years)) +
+#   geom_point(aes(y=counts)) +
+#   geom_line(aes(y=counts)) +
+#   facet_grid(rows = vars(Season)) +
+#   labs(title = "Migrant Counts",
+#        y = "") +
+# 
+#   scale_x_continuous("Years",
+#                      labels = as.character(totalres$Year),
+#                      breaks = as.numeric(totalres$Year)) +
+#   theme(axis.text.x = element_text(angle = 90))
+  
+
+
+```
+
+\vspace{1cm}
+
+\begin{figure}[H]
+  \centerline{%
+  \includegraphics[width=0.5\textwidth]{D:/Thesis/writeup/plots/comb_res_counts.png}%
+  \includegraphics[width=0.5\textwidth]{D:/Thesis/writeup/plots/comb_mig_counts.png}%
+  }%
+  \caption{Combined counts of waterbirds per year at Barberspan wetland separated by migratory status with summer counts displayed on the top plot and winter counts displayed on the bottom plot.}
+\end{figure}
+
+Figure 2 shows a large difference between the number of residents and migrants in Barberspan. For this reason the resident and migrant species were modelled and analysed separately. Modelling and analysing migrants and residents together would lead to the model fitting the resident species more accurately than the migrant species. 
+
+The residents and migrants have also been analysed separately to account for their differences in seasonal abundance patterns. These patterns present themselves in the data and are evident in figure 2. There are clearly more migrant species present in Barberspan during summer than winter. This is due to their migratory pattern as these waterbirds often migrate to the south for the southern summer. The resident counts do not display this pattern. The resident counts tend to fluctuate randomly throughout the year with no clear reason for these fluctuations. 
+
+The CWAC dataset, unfortunately, does not have recorded counts for every year since its inception. The following time periods contained no counts: The winter of 1995, the winter of 1996 to the winter of 1998, the winter of 2007, the winter of 2010 to the winter of 2014, the summer of 2016 to the winter of 2017 and the winter of 2018.
+
+
+## State Space Model
+
+State-space time series models (SSMs) have been used for modelling population dynamics in this study. SSMs are flexible models that allow one to modify population models to account for known biological processes that affect population variation. This works well when modelling migratory avian species [@barshepIdentifyingEcologicalLifehistory2017; @campEvaluatingAbundanceTrends2016; @wilsonAnalyzingVariabilityRate2011]. State-space models are also able to separate the observation and latent error. By removing the observation error from the latent error, the model is able to predict population trends more accurately [@keryBayesianPopulationAnalysis2011]. Bird count data are often affected by observation error as counters are prone to missing or double counting individuals. This makes SSMs ideal in the current situation.
+
+There have been two studies which applied SSMs to waterbird counts in Southern Africa [@barshepIdentifyingEcologicalLifehistory2017; @simmonsDeclinesMigrantShorebird2015]. @barshepIdentifyingEcologicalLifehistory2017 used two different SSMs. A univariate model for resident species, “sedentary residents with limited or no seasonal movement between sites” and a bivariate model (with summer and winter as the two variables) for the migrant species, “Palaearctic migrants and intra-African migrants”. Both studies utilised the same model for the migrant species. Both models are fitted to the logarithm of the counts.
+
+Model 1 is a univariate model that treats summer/winter as a covariate. The observation process is modelled as follows:
+
+
+\begin{equation}
+  ln(y_{t}) = \mu_{t} + \gamma_{t} + \alpha_{t},\;\;\;\alpha_{t} \sim N(0,\sigma    ^{2}_ \alpha)
+\end{equation}
+
+where $ln(y_{t})$ is the natural logarithm of the summer and winter counts, $\mu_t$ is the true population level, $\alpha_t$ is the observation error with variance $\sigma_{\alpha}^2$ and $\gamma_t$ is the summer/winter variable represented as follows:
+
+\begin{equation}
+  ln(seasonal\;effect): \gamma_{t} = -\gamma_{t-1} + \zeta_{t},\;\;\;\zeta_{t} \sim N(0,\sigma^{2}_\zeta)
+\end{equation}
+
+where a positive $\gamma_{t}$ represents the summer effect. To parameterize seasonal effects we use deviations from a mean, so that the level refers to an average population level over the year and seasonal differences are measured as deviations from this overall mean. The seasonal effects add to zero, as is commonly done for effect parameters. 
+
+The state process was modelled as a linear trend model as the resident species tend to remain in the same place all year round. The state process is represented as follows:
+
+\begin{equation}
+  ln(relative\;population\;size\;at\;time\;t): \mu_{t} = \mu_{t-1} + \beta_{t-1} + w_{t},\;\;\;w_{t} \sim N(0,\sigma^{2}_w)
+\end{equation}
+
+where $\beta_t$ is the rate of change of the population over time and is modelled as follows:
+
+\begin{equation}
+  ln(population\;change): \beta_{t} = \beta_{t-1} + \epsilon_{t},\;\;\;\epsilon_{t} \sim N(0,\sigma^{2}_\epsilon)
+\end{equation}
+
+the variables $\alpha_t$, $w_t$, $\epsilon_t$ and $\zeta_t$ are all serially independent with variances $\sigma_\alpha^2$, $\sigma_w^2$, $\sigma_\epsilon^2$ and $\sigma_\zeta^2$ respectively. This concludes model one that is applied to resident species. See Figure 3 for a visual illustration of model 1.
+
+Model 2 is applied to the migrants and considers their migratory movement. The migrant species in South African wetlands tend to breed in the northern hemisphere (during the southern winter) then migrate south for the southern summer. The young birds tend to remain in the south during the subsequent southern winter period. Model 2 was thus formulated as a bivariate time series model treating summer counts and winter counts as separate variables with the summer population as the main focus. The proportion of birds that stay over for the subsequent southern winter was modelled as the second variable. Figure 3 shows a visual description of this model. The mathematical representation of model 2 is as follows:
+
+_observation process_
+
+\begin{equation}
+  ln(summer\;count): s_{t} = \mu_{t-1} + \alpha_{t},\;\;\;\alpha_{t} \sim N(0,\sigma^{2}_\alpha)
+\end{equation}
+
+\begin{equation}
+  ln(winter\;count): w_{t} = \mu_{t} + \lambda_{t} + e_{t},\;\;\;e_{t} \sim N(0,\sigma^{2}_e)
+\end{equation}
+
+_state process_
+
+\begin{equation}
+  ln(summer\;population\;level): \mu_{t} = \mu_{t-1} + \beta_{t-1} + w_{t}, \;\;\; w_{t} \sim N(0, \sigma^{2}_w)
+\end{equation}
+
+\begin{equation}
+  ln(population\;change): \beta_{t} = \beta_{t-1} + \zeta_{t}, \;\;\; \zeta_{t} \sim N(0, \sigma^{2}_\zeta)
+\end{equation}
+
+\begin{equation}
+  ln(summer\;to\;winter\;ratio): \lambda_{t} = \lambda_{t-1} + \epsilon_{t}, \;\;\; \epsilon_{t} \sim N(0,\sigma^{2}_\epsilon)
+\end{equation}
+
+where, $s_{t}$ is the summer count at time $t$ and $w_{t}$ is the winter count at time $t$. $\mu_{t}$ is the latent summer population, $\beta_{t}$ is the rate of change at time $t$ and $\lambda$ is the winter to summer ratio. The winter to summer ratio refers to the difference in the bird population from summer to winter. The palearctic migrants usually migrate north for winter, and leave their young behind, thus leaving a smaller proportion of birds in the South African wetlands in winter compared to summer.  $\alpha_{t}$, $e_{t}$, $w_{t}$, $\zeta_{t}$ and $\epsilon_{t}$ are all normally distributed, serially independent and independent of each other with variance $\sigma^{2}_\alpha$, $\sigma^{2}_e$, $\sigma^{2}_w$, $\sigma^{2}_\zeta$ and $\sigma^{2}_\epsilon$ respectively.
+
+Model 2 has been used in this study and applied to both migrant and resident species. The two species differ in migratory patterns but there is reason to believe that observation error may be dependent on the season. Separating the winter and summer counts allows the model to account for season specific observation error. Therefore, the same state-space model was applied to both the residents and the migrants.
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.6\textwidth}
+    \caption{Model 1}
+    \includegraphics[width=\textwidth]{D:/Thesis/writeup/plots/model1_ill.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.6\textwidth}
+    \caption{Model 2}
+    \includegraphics[width=\textwidth]{D:/Thesis/writeup/plots/model2_ill.png}
+  \end{subfigure}
+  \caption{Visual illustrations of State Space Model 1 and 2 to model resident                   waterbirds and migrant waterbirds respectively (Barshep et
+          al. 2017). The symbol representation is as follows:
+          \newline
+          \newline
+          $y_t$ = summer and winter count observations for the univariate model at time t
+          \newline
+          $s_t$ = summer count at time t
+          \newline
+          $w_t$ = winter count at time t
+          \newline
+          $\gamma_t$ = seasonal effect at time t
+          \newline
+          $\mu_t$ = population level at time t
+          \newline
+          $\beta_t$ = slope at time t
+          \newline
+          $\lambda_t$ = winter to summer ratio at time t}
+\end{figure}
+
+### Inferential approaches to SSMs
+
+There are two fundamentally different ways to fit SSMs. That is a frequentist approach or a Bayesian approach [@auger-metheGuideStatespaceModeling2021].
+
+**Frequentist approach**
+
+The frequentist, or classical, approach is common in most statistical analyses. When fitting SSMs according to the frequentist framework, we essentially perform maximum likelihood estimation on the joint likelihood of the parameters, $\theta$, and the states, $z$. The mathematical structure can be illustrated as follows:
+
+\begin{equation}
+  L(\theta,z_{1:T}|y_{1:T}) = \prod_{t=1}^T g(y_{t}|z_{t},\theta_{0})f(z_{t}|z_{t-1},\theta_p)
+\end{equation}
+
+where $\theta_0$ and $\theta_p$ represent the observation process parameters and the state process parameters respectively, and $T$ representing the length of the time series. The initial state, $z_0$ at time $t_0$, is usually defined by setting a vague initial state distribution for $z_0$ or fixing $z_0$ equal to the first observation [@auger-metheGuideStatespaceModeling2021]. To simplify the maximum likelihood process, one would first maximise the marginal likelihood and integrate out the hidden states ($z$) [@auger-metheGuideStatespaceModeling2021], thus, only having to maximise the marginal likelihood with respect to the parameters ($\theta$). The parameter estimates produced from maximising the marginal likelihood have the necessary statistical properties (consistency and asymptotic normality) to estimate the hidden states [@devalpineFrequentistAnalysisHierarchical2012; @doucConsistencyMaximumLikelihood2011]. One would use the predicted parameters and calculate the conditional distribution of the hidden states given the observations ($y$) and the estimated parameters ($\widehat\theta$). Calculating the maximum marginal likelihood with respect to the parameters is a computationally expensive problem. This is the common limitation for SSMs in general, for both the frequentist and Bayesian approach [@auger-metheGuideStatespaceModeling2021].
+
+There are two common methods one can use to evaluate the maximum marginal likelihood. Namely the Kalman Filter and the Laplace approximation method (which approximates the maximum marginal likelihood as opposed to evaluating it).
+
+**Bayesian approach**
+
+The Bayesian approach takes into account previous information that is summarised into a quantitative model known as the prior distribution [@ellisonBayesianInferenceEcology2004]. Bayesian modelling provides a platform to incorporate external evidence or expert knowledge with evidence presented by the study [@goodmanIntroductionBayesianMethods2005].
+
+Bayesian statistics revolves around Bayes' rule. Bayes' rule is a way to calculate unknown conditional probability. That is, to calculate the probability of the parameters of a model given the data [@clydeChapterBasicsBayesian2021]. The mathematical expression of the Bayes Rule is as follows: 
+
+\begin{equation}
+  p(\theta|y)=\frac{p(y|\theta)p(\theta)}{p(y)}
+\end{equation}
+
+Where $y$ represents the observed data and $\theta$ represents the model parameters. $p(y|\theta)$ represents the probability of observing the data given a set of parameters (the likelihood) and $p(\theta)$ represents the prior probability of experiencing those parameters [@clydeChapterBasicsBayesian2021].
+
+The need to specify priors is considered to be an advantage by some and criticised by others [@dennisDiscussionShouldEcologists1996]. However, if the expert knowledge is sound, it would greatly benefit the model and will lead to more biologically sound outcomes. 
+
+Given the criticism of subjective priors [@leleBayesianMethodsHierarchical2009], the least controversial way for choosing priors is, therefore, to use non-informative priors as far as possible. In this dissertation uniform priors were used for all parameter estimates. It was further discovered that the results were not affected when using different non-informative priors. Uniform and normal priors were tested and both yielded very similar results.
+
+Besides the use of priors being a contentious topic, the Bayesian approach still holds a vast array of benefits. Hierarchical models are conceptually easier to understand when cast within a Bayesian framework [@keryBayesianPopulationAnalysis2011]. Count data are observations that are based on the true population of monitored species. The observations and true population relate to each other in a hierarchical manner and are subject to both observation and process error. Given this hierarchical structure, the Bayesian approach is a more intuitive method to use.
+
+When applying SSMs in a Bayesian context, the main goal is to determine the posterior distribution for the states and the parameters based on data and the prior distributions. The mathematical representation of this approach is as follows:
+
+\begin{equation}
+  p(\theta,z_{1:T}|y_{1:T},\kappa)=\frac{L_J(\theta,z_{1:T}|y_{1:T})\pi(\theta|\kappa)}{\int\int L_J(\theta,z_{1:T}|y_{1:T})\pi(\theta|\kappa)dz_{1:T}d\theta}
+\end{equation}
+
+where $L_J(\theta,z_{1:T}|y_{1:T})$ is the joint likelihood and $\pi(\theta|\kappa)$ is the prior distribution(s). The denominator of equation 12 represents the probability of the data for all possible values of the states and parameters. Equation 12 forms the basic structure of Bayes' theorem as seen in equation 11. 
+
+The posterior distribution is the focus in the Bayesian approach. This is most commonly done by obtaining samples from the posterior distribution through a Markov Chain Monte Carlo (MCMC) approach. This is a computationally expensive task that is nearly impossible to do by hand. There are various MCMC algorithms that approximate the posterior distribution. Namely, Metropolis Hastings samplers, Hamiltonian Monte Carlo and the Gibbs sampler, amongst many [@auger-metheGuideStatespaceModeling2021].
+
+Another important aspect in the Bayesian approach is to apply convergence tests on the MCMC outcome, regardless of the sampler used. Testing convergence ensures that the sampler used, after approximating the probabilistic distribution many times, has converged to the stationary distribution. This can often be viewed on a trace plot of MCMC outcomes [@auger-metheGuideStatespaceModeling2021]. A more formal approach would be the Gelman-Rubin statistic [@gelmanInferenceIterativeSimulation1992], which is a popular metric to measure convergence in an MCMC context. The Gelman-Ruben statistic compares variation between chains to variation within chains, with values close to one indicating that convergence has been achieved.
+
+A Bayesian approach was used to fit the SSM to the data in this study. The model was fit using the Just Another Gibbs Sampler (JAGS) package and applied in R [@plummerJAGSProgramAnalysis2003; @R; @jagsui]. A Gibbs sampler is an MCMC method that samples variables sequentially from a multivariate distribution while keeping all other variables constant [@coroGibbsSamplingJAGS2017]. The JAGS package uses an internally specified variation of a Gibbs sampler to estimate the model states and parameters. In the immediate case, the probability distribution will take on the form of equation 12 which will be based on equations five to nine. Uniform priors were used for all variance parameters ($\alpha$, $e$, $_w$, $\zeta$ and $\epsilon$ ) with a range of [0,10] and MCMC trace plots and the Gelman-Rubin metric were used to test convergence of the estimated states and parameters. Appendix C displays the convergence of the variance parameters along with its Gelman-Ruben statistic (or Rhat value). The convergence output for all the waterbirds used were fairly similar, because of this only one waterbird (Egyptian Goose) was used to display convergence output in Appendix C.
+
+### Model selection
+
+A major drawback of the SSM is the issue of model selection. Model selection for SSMs are still an area of active research [@jonsenStatespaceModelsBiologgers2013]. SSM model selection becomes difficult as the computation power needed to run an SSM is so large [@auger-metheGuideStatespaceModeling2021]. As a result, ecologists end up using only one SSM model in the study because of limited computational power.
+
+Model comparison methods differ depending on whether the SSM is conducted in a Frequentist framework or a Bayesian framework. The most used model selection method for a frequentist SSM is the Akaike Information Criterion (AIC). The AIC is a popular model selection method in many statistical models. The AIC is a relative measure of how well the model fits the data and penalizes models with a higher number of parameters. AIC, however, does not work well for SSMs, even in a frequentist framework, for various reasons [@auger-metheGuideStatespaceModeling2021].
+
+For SSMs in a Bayesian context, AIC is not well defined [@hootenGuideBayesianModel2015]. There are 3 notable model selection methods used for Bayesian SSMs. These are the Watanabe-Akaike Information Criterion (WAIC), Deviance Information Criterion (DIC) and Bayesian Information Criterion (BIC). Many sources of literature have shown that DIC and BIC do not work well for Bayesian model selection [@auger-metheGuideStatespaceModeling2021; @gelmanUnderstandingPredictiveInformation2014; @hootenGuideBayesianModel2015]. Sources have found WAIC to be more effective than DIC and BIC, even though it still fails in many cases [@gelmanUnderstandingPredictiveInformation2014]. The method most of the literature agreed upon was a cross-validation method. In this cross-validation method, the SSM would be fit with a training set of the data, while an unused subset of the data (the test set) is used to determine the effectiveness of the SSM's forecasting ability. The SSM that forecasts values closest to the corresponding test set values is then considered the “best” model. This method works well but has its limitations when data is sparse. In the case of sparsity, splitting the data into a training and test set becomes difficult as the training set may not be sufficient to estimate all parameters of the model. Furthermore, splitting time series data into training and test set becomes difficult because of the serial dependence between the data points.
+
+@yoccozUseOveruseMisuse1991 and @coxRoleSignificanceTests1977, state that, at times, ecologists tend to overemphasize the use of statistical measures for model selection and fail to prioritise biological or ecological factors. Model selection becomes even more dubious when in a Bayesian context [@hootenGuideBayesianModel2015], and even more so with SSMs [@auger-metheGuideStatespaceModeling2021]. Both @hootenGuideBayesianModel2015 and @auger-metheGuideStatespaceModeling2021 agree that cross-validation is the best tool to use for bayesian model selection. However, the sparce and dependent nature of the CWAC data inhibited the ability to create training and test sets for cross-validation. 
+
+Given the contentious issues regarding model selection for SSMs, and the inability to use cross-validation, it is beneficial to choose the SSM that is based on sound ecological fundamentals rather than contentious model selection statistics. More time and effort should be focused on the modelling process and ensuring the correct ecological processes are modelled into the SSM.
+
+The model selection process in this study was based on ecological background and knowledge rather than traditional model selection metrics for SSMs such as DIC, AIC or WAIC, thus following the philosophy of @coxRoleSignificanceTests1977 and @yoccozUseOveruseMisuse1991.
+
+## Biodiversity Indices
+
+There are multiple different ways one can formulate biodiversity indices. The first, and main task, however, is to identify what must be monitored and how [@yoccozMonitoringBiologicalDiversity2001]. In the South African wetland’s context, one would want to monitor species that directly reflect changes in the ecosystem. This would be species that follow a pressure–state–response network chain [@niemeijerFramingEnvironmentalIndicators2008]. As discussed in the introduction, species like the Great Crested Grebe (eutrophication level indicator) and Red-Knobbed Coots (siltation rate indicator) provide known causal links to environmental changes.
+
+Biodiversity is an important aspect of any ecosystem [@duffyWhyBiodiversityImportant2009] and subject to large scale conservation efforts such as the Aichi convention. Biodiversity has many definitions. According to @magurranMeasuringBiologicalDiversity2003, biodiversity is the “variety and abundance of species in a defined unit of study”. @bucklandMonitoringChangeBiodiversity2005 defines biodiversity as how the abundance is distributed across species, otherwise known as evenness. Evenness refers to the level of homogeneity of the ecosystem, regarding its species. For example, if an ecosystem contains 5 different bird species, with each bird species containing an equal number of individuals, then that ecosystem's bird population would be displaying perfect evenness. Whereas, if the ecosystem contains one or two dominant bird species then it would be displaying an uneven bird population. The research thus exhibits two different types of indicators that reflect the state of a wetland, one to monitor the variety of waterbirds in a wetland and one to monitor the evenness of waterbirds in a wetland.
+
+The two most common indices used to measure the number of species in an ecosystem and evenness are the exponentiated Shannon's entropy and the Simpson's index, respectively. The Shannon's entropy obtains a value that describes the entropy of a community. According to @jostEntropyDiversity2006, this entropy measure should ideally be transformed to obtain a more useful and intuitive index value. This can be done by transforming the Shannon's entropy to a measure representing the effective number of species in a community [@jostEntropyDiversity2006]. This is achieved by exponentiating the Shannon's index. The Simpson's index does not need to be transformed in any way as its output is already an intuitive index value. The Simpson's index presents a value between zero and one with one representing perfect evenness and values closer to zero representing a more uneven population.
+
+**Abundance Index**
+
+A popular population abundance index is the Living Planet Index (LPI) that is designed to track changes in population sizes over time. The LPI is used as an aggregated abundance index. It calculates the percentage change from a reference year (1970) to all subsequent years. This is done by averaging the rate of change (from reference year to current year) across all species of a species group [@mcraeDiversityWeightedLivingPlanet2017].
+
+A criticism of the LPI is that it tends to over represent birds and mammals in temperate realms as they are more intensely monitored [@collenMonitoringChangeVertebrate2009]. In response, the LPI was modified to include a proportionally weighted index [@mcraeDiversityWeightedLivingPlanet2017]. The weighted LPI tackles the problem of taxonomic and geographical bias. The weighted LPI is applied to the problem of bias that presents itself mostly on a global level. 
+
+The LPI is calculated as follows:
+\begin{equation}
+  \overline{d_t}=\frac{1}{n_t}\sum_{i=1}^{n_t}d_{it}
+\end{equation}
+
+where $\overline{d_t}$ is the average annual trend if there were multiple population time series of the same species. $n_t$ refers to the number of populations. $d_{t}$ is the annual rate of change for a population at time $t$, and is represented as follows: 
+
+\begin{equation}
+  d_{t}=log_{10}\left(\frac{N_{t}}{N_{t-1}}\right)
+\end{equation}
+
+where $N_{t}$ refers to the population size during year t. 
+
+The LPI is conducted using two different methods. One being the LPI-U (unweighted LPI) and the LPI-D (proportionally weighted LPI). In the LPI-U, the data is divided into 6 subsets. Based on region (tropical or temperate) and three realms (terrestrial, freshwater and marine). The index for each system is calculated by averaging the species trends within each system. The systems being (tropical terrestrial, tropical freshwater, temperate terrestrial, etc.). The index for each region (tropical or temperate) is then calculated by averaging the trends for each system. The tropical and temperate trends are then averaged to form a global trend which is converted into an index as follows:
+
+\begin{equation}
+  I_t=I_{t-1}*10^{\overline{d_t}},\;\;\;\;I_0=1
+\end{equation}
+
+where $\overline{d_t}$, in this case, is the average trend within a region, realm, system or globally.
+
+The LPI-D approach is similar. The only difference is that it applies proportional weights to species when averaging the trends. For example, if birds represent 43.3% of terrestrial vertebrate species in the Palearctic realm, then this value is used in weighting the bird species when calculating the weighted average of the Palearctic realm trend for terrestrial species. The mathematical representation is as follows:
+
+\begin{equation}
+  \overline{d_{t,realm.region}} = \frac{1}{N_t}\sum_{j=1}^{N_t}d_{jt}w_j
+\end{equation}
+
+where $d_t$ is the average trend of a given realm and region. $N_T$ is the number of taxonomic groups within a realm, $d_{jt}$ is the average trend of taxonomic group $j$ at time $t$ and $w_j$ is the proportional weighting of that taxonomic group (0.43 according to the previous example).
+
+Understanding waterbirds population change over time in South African wetlands is invaluable to our understanding of the wetland they occupy. As discussed previously, some species populations may indicate certain wetland characteristics such as eutrophication levels and siltation rates. Monitoring the combined number of waterbird species can indicate when there are sharp declines or increases in species abundance. These sharp turning points could indicate that the wetland is changing in some way and thus alert wetland managements to further assess the wetland and take necessary action.
+
+A modified LPI approach was used to form an abundance index in this study. The modified LPI used calculates percentage change from each year to the next for a trait specific group of waterbirds.
+
+The modified LPI calculations were applied to the mean summer population posterior value, per year, estimated by the state-space model. The SSM was first applied to each species in a trait specific group separately. The percentage change for each year was calculated for each species, then the average percentage change across all species in the group was calculated, per year. The calculations used are as follows:
+
+\begin{equation}
+  d_t = \frac{\mu_{t}-\mu_{t-1}}{\mu_{t-1}}
+\end{equation}
+
+where $d_t$ is the population percentage change at year $t$ for a single waterbird species and $\mu_{t}$ is the mean value of the true summer population at time $t$, obtained from the state-space output (see equation 5). The average percentage change per year, for a trait specific group, was calculated by taking the average $d_t$ across all waterbirds in the trait specific group per year. The mathematical representation is as follows:
+
+\begin{equation}
+  \overline{d_{tg}} = \frac{1}{N}\sum_{i=1}^{N}d_{ti}
+\end{equation}
+
+where $\overline{d_{tg}}$ is the average population percentage change for trait group $g$ at year $t$. $N$ is the total number of waterbirds in group $g$. $d_{ti}$ is the percentage change of species $i$ at year $t$.
+
+Unlike the LPI, it does not convert the percentage change to an index value. Converting percentage change from a reference year to an index value resulted in high levels of uncertainty in the index value. Using percentage change only was still subject to high levels of uncertainty but less than if it were converted to an index value after. 
+
+The modified LPI can be applied to any groupings of waterbird species. One could group the waterbirds based on different traits and calculate the percentage change per year on that specific group. The waterbirds could be grouped together based on traits such as habitat, body size, brood size, food type, etc. For this dissertation migrant status, nest site and the number of different foraging sites used by a waterbird were used as examples of how the modified LPI can be used for trait specific groups (Figure 4 and 5).
+
+```{r traits_dist, echo=FALSE}
+
+# ALL LABELS AREN'T VISIBLE ON THE X AXIS FOR NEST TYPE PLOT
+
+# nestSites <- as.data.frame(newRobert %>% group_by(`Nest site`) %>% count())
+# foraging <- as.data.frame(newRobert %>% group_by(numForage) %>% count())
+# 
+# barplot(nestSites$n, names.arg = nestSites$`Nest site`, xlab = "Nest site", ylab = "Quantity", main = "Nest type distribution")
+# 
+# barplot(foraging$n, names.arg = foraging$numForage, xlab = "Number of different foraging sites used", ylab = "Quantity", main = "Number of foraging type distribution")
+
+```
+
+\begin{figure}[H]
+  \includegraphics{D:/Thesis/writeup/plots/nest_eda.png}
+  \caption{Number of species that use each nest site type}
+\end{figure}
+
+\begin{figure}[H]
+  \includegraphics{D:/Thesis/writeup/plots/foraging_eda.png}
+  \caption{Quantity of species that make use of one, two, three or four different types of foraging sites}
+\end{figure}
+
+The majority of species in Barberspan nest on the ground. These nests are commonly built by creating a depression in the ground lined with grass or feathers. 24 different waterbird species predominantly build their nest on the ground. 7 different species build their nest in the reeds and 11 species use trees to nest. The cavity, aquatic and shrub nest type are attributed to the fewest species (10 different species in total).
+
+There are five different foraging sites represented in the above plot. These sites are: aquatic, ground, off-ground, aerial and mud. Most species in Barberspan only make use of one of these sites (33 different species). 16 different species utilise at least two different foraging sites and only 6 species utilise 3 or more foraging sites.
+
+The modified LPI used in this dissertation was applied to each of the groups represented by the above plots. For each group the SSM was applied to the combined counts of that group. The SSM was then applied to each individual species of the group and the median percentage population change, per year, was calculated across all species in the group to determine the annual percentage population change for the group.
+\newpage
+
+**Diversity indices**
+
+The diversity of species in an ecosystem is a very important aspect of a healthy ecosystem [@duffyWhyBiodiversityImportant2009]. Richer species diversity, or higher levels of evenness, is indicative of a healthy ecosystem [@hooperEffectsBiodiversityEcosystem2005]. Quantifying diversity has been a contentious measure in ecology [@peetMeasurementSpeciesDiversity1974]. The literature emphasizes that diversity is dependent on the research questions and the task at hand and there is no universally agreed upon definition of what diversity is [@hurlbertNonconceptSpeciesDiversity1971].
+
+In the context of this dissertation, which focuses on South African wetlands and waterbirds, the aim is to monitor the biodiversity of the waterbird species in a wetland over time. The popular indices used to measure species biodiversity are the Shannon Entropy and the Simpson Index. There have been studies aimed at finding the best index for species diversity. These studies agree that one can’t identify one all-encompassing index, but using a few together gives one a better overview of the ecosystem [@morrisChoosingUsingDiversity2014].
+
+The closest framework there is to an all-encompassing diversity index is the Hill Numbers model [@hillDiversityEvennessUnifying1973]. The Hill Numbers framework provides a range of measures of the effective number of species in a system. Each one differing in their propensity to add more, or less emphasis on the rarer species. The Hill Numbers general formula is as follows:
+
+\begin{equation}
+  N_\alpha=(p_1^\alpha + p_2^\alpha + \ldots + p_n^\alpha)^{\frac{1}{1-\alpha}}
+\end{equation}
+
+where $N_\alpha$ is the diversity number of order $\alpha$. These diversity numbers reflect an estimate of the effective number of species present in a sample. The p’s refer to the proportions of species in the sample and n represents the number of species in the sample. The most commonly used values for $\alpha$ are zero, one and two. $N_0$ refers to the number of species in a sample. $N_1$ results in an exponent $\frac{1}{1-1}$ but, according to Hill, the $N_1$ diversity number approximates to the exponential of the Shannon's Entropy (proof is supplied by Hill). The more general formula for the Shannon Entropy is as follows:
+
+\begin{equation}
+  x=-\sum_{i=1}^Sp_iln(p_i)
+\end{equation}
+
+where $x$ is the index, $p_i$ is the proportion of species $i$ in the sample and $S$ is the number of species in the sample.
+
+$N_2$ is the inverse Simpson’s Index. The more common general formula for the Simpson’s Index is as follows:
+
+\begin{equation}
+  x=\sum_{i=1}^Sp_i^2
+\end{equation}
+
+Different indices measure different aspects of diversity [@hillDiversityEvennessUnifying1973]. The Simpson’s Index is more sensitive to the abundance of common species in an ecosystem. For this reason, it is also referred to as the measure of dominance concentration. Whereas the Shannon entropy index measures the entropy of an ecosystem [@jostEntropyDiversity2006].
+
+According to @jostEntropyDiversity2006, the problem with some diversity indices is the way in which researchers use them. For example, the Shannon’s entropy index is not a diversity measure but rather a measure of entropy in the ecosystem [@jostEntropyDiversity2006]. Thus, it becomes more intuitive and easy to work with when converted to a true diversity (effective number of species in an ecosystem) before any comments can be made regarding diversity in the ecosystem. Jost, uses the example of other fields such as physics, economics and information theory. It is common practice in all these fields to convert entropy values to the effective number of elements in a system instead of reporting on the entropy index value. One simply needs to exponentiate the Shannon Entropy value to determine the effective number of species in the ecosystem. 
+
+The Simpson’s index can be used without any conversion as it already is an index value and is immediately intuitive and easy to use without any conversions. As a result no transformations were made on the Simpson's index in this dissertation. The Simpson’s index is a measure of dominance with values ranging from zero (lowest level of evenness) to one (highest level of evenness) and can be used directly to determine dominance in an ecosystem without any conversion.
+
+Further problems are addressed regarding diversity indices in ecology. Measuring diversity in a system has many differing semantic and technical aspects. Given the different aspects of diversity, and the plethora of possible indices to measure them, some have argued that diversity measures are a “nonconcept” [@hurlbertNonconceptSpeciesDiversity1971]. However, given the variety of measures one can use, the issue is perhaps not the indices but how to choose which ones to use.
+
+The best way to use diversity indices is to use various indices simultaneously [@whittakerDominanceDiversityLand1965], as each index can tell the user different aspects of the diversity in the system. In terms of the Shannon's entropy and Simpson's index, the Shannon's entropy, when exponentiated, gives a value of the effective number of species in an ecosystem while the Simpson's index tells the user about the dominance concentration of the ecosystem.
+
+Biodiversity has many definitions and applications. The use of more than one biodiversity index is important to cover as many aspects of biodiversity as possible. This gives the user a more complete understanding of the wetland and waterbird state. This is the reason three different biodiversity indicators were used in the dissertation. When a user analyses these indices in conjunction with one another they are able to see a clearer picture of waterbird and wetland state. 

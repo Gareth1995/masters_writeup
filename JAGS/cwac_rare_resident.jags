@@ -1,0 +1,26 @@
+# model for common resident species
+
+model{
+
+  # priors
+  mu_t[1] ~ dunif(0,1) # prior for initial population size
+  
+  tau.w2 ~ dunif(0,log(10))
+  tau.eps2 ~ dunif(0,1)
+  tau.alpha ~ dunif(0,1)
+  
+  sig.w2 = 1/tau.w2
+  
+  # likelihood
+  # state process
+  for (t in 1:(n-1)){
+    w[t] ~ dnorm(0, sig.w2)
+    mu_t[t+1] = mu_t[t] + w[t]
+  }
+  
+  # observation process
+  for(t in 1:n){
+    y[t] ~ dpois(mu_t[t])
+    
+  }
+}

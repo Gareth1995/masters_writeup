@@ -1,0 +1,8 @@
+---
+title: ''
+output: pdf_document
+---
+
+\section*{Acknowledgements}
+
+I would firstly like to thank God for His continual presence in my life. Without His guidance I would not be where I am now. I would also like to give a big thank you to my supervisors, Res Altwegg and Dr Birgit Erni, for guiding me through my dissertation. Without your help and guidance the completion of this dissertation would have not been possible. I would also like to thank my family who have been supporting me throughout my university career and who have made countless sacrifices to make it all possible. I cannot express my gratitude enough toward all those who have supported me along this journey. 

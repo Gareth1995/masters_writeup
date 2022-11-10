@@ -1,0 +1,2 @@
+"0",""
+"0","knitr::include_graphics(c(""plots/goose_sigma_alpha.png"", ""plots/goose_sigma_e.png"", ""plots/goose_sigma_w.png"", ""plots/goose_sigma_zeta.png"", ""plots/goose_sigma_eps.png""))"

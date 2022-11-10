@@ -1,0 +1,95 @@
+
+
+# shannondf <- as.data.frame(cbind("resident summer" = shan.res.sum,
+#                    "resident winter" = shan.res.win,
+#                    "migrant summer" = shan.mig.sum,
+#                    "migrant winter" = shan.mig.win,
+#                    "years" = unique(bp_counts$Year)))
+# 
+# shannondf <- shannondf %>%
+#   select(years, everything()) %>%
+#   gather(key = "Legend", value = "value", -years)
+# 
+# shan.plot <- ggplot(shannondf, aes(x=years, y=value)) +
+#   geom_line(aes(color = Legend, linetype = Legend)) +
+#   scale_colour_manual(values = c('darkred', 'steelblue', 'green', 'black'))+
+#   labs(title = "Exponentiated Shannon Index",
+#        x = "Years", y = "Index") +
+#   scale_x_continuous("Years",
+#                      labels = as.character(unique(bp_counts$Year)),
+#                      breaks = as.numeric(unique(bp_counts$Year))) +
+#   theme(axis.text.x = element_text(angle = 90))
+# 
+# simpdf <- as.data.frame(cbind("resident summer" = simp.res.sum,
+#                    "resident winter" = simp.res.win,
+#                    "migrant summer" = simp.mig.sum,
+#                    "migrant winter" = simp.mig.win,
+#                    "years" = unique(bp_counts$Year)))
+# 
+# simpdf <- simpdf %>%
+#   select(years, everything()) %>%
+# #residents in summer
+# res.summer <- lapply(res.jags, function(x){
+#     return(exp(x$mean$mu_t))
+#   })
+# # residents in winter
+# res.winter <- lapply(res.jags, function(x){
+#     return(exp(x$mean$mu_wt))
+#   })
+# 
+# # Shannon index
+# shan.res.sum <- exp(diversity(as.data.frame(res.summer), index = "shannon"))
+# shan.res.win <- exp(diversity(as.data.frame(res.winter), index = "shannon"))
+# 
+# # Simpson index
+# simp.res.sum <- diversity(as.data.frame(res.summer), index = "simpson")
+# simp.res.win <- diversity(as.data.frame(res.winter), index = "simpson")
+# 
+# 
+# # migrants in summer
+# mig.summer <- lapply(mig.jags, function(x){
+#     return(exp(x$mean$mu_t))
+#   })
+# # migrants in winter
+# mig.winter <- lapply(mig.jags, function(x){
+#     return(exp(x$mean$mu_wt))
+#   })
+# 
+# # shannon index
+# shan.mig.sum <- exp(diversity(as.data.frame(mig.summer), index = "shannon"))
+# shan.mig.win <- exp(diversity(as.data.frame(mig.winter), index = "shannon"))
+# 
+# # simpson index
+# simp.mig.sum <- diversity(as.data.frame(mig.summer), index = "simpson")
+# simp.mig.win <- diversity(as.data.frame(mig.winter), index = "simpson")
+
+
+
+#   gather(key = "Legend", value = "value", -years)
+# 
+# simp.plot <- ggplot(simpdf, aes(x=years, y=value)) +
+#   geom_line(aes(color = Legend, linetype = Legend)) +
+#   scale_colour_manual(values = c('darkred', 'steelblue', 'green', 'black'))+
+#   labs(title = "Simpson Index",
+#        x = "Years", y = "Index") +
+#   scale_x_continuous("Years",
+#                      labels = as.character(unique(bp_counts$Year)),
+#                      breaks = as.numeric(unique(bp_counts$Year))) +
+#   theme(axis.text.x = element_text(angle = 90))
+# 
+# plot_grid(shan.plot, simp.plot, nrow = 2, ncol = 1)
+
+\begin{figure}[H]
+  \includegraphics{D:/Thesis/birdie/Report/plots/bioindex.png}
+  \caption{The Shannon and Simpson's indices for resident and migrant species in winter and summer}
+\end{figure}
+
+\begin{figure}[H]
+  \includegraphics{D:/Thesis/writeup/plots/nest_eda.png}
+  \caption{Number of species that use each nest site type}
+\end{figure}
+
+\begin{figure}[H]
+  \includegraphics{D:/Thesis/writeup/plots/foraging_eda.png}
+  \caption{Quantity of species that make use of one, two, three or four different types of foraging sites}
+\end{figure}

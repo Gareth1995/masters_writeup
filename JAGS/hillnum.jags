@@ -1,0 +1,121 @@
+# Jags model that includes the calculation of the hill numbers
+
+# this model is not for display purposes. Only for producing proportions
+
+model {
+
+  # Priors
+  for(x in 1:numspecs){
+    mu_t[1,x] ~ dunif(0,7.313) # prior for initial population size
+    beta[1,x] ~ dunif(-1, 1) # prior for initial growth rate
+    lambda[1,x] ~ dnorm(0, 0.001)
+    real_mu[1,x] = exp(mu_t[1,x])
+  }
+
+  tau.zeta ~ dunif(0, 2.303)
+  tau.w2 ~ dunif(0, 2.303)
+  tau.alpha ~ dunif(0, 2.303)
+  tau.e ~ dunif(0, 2.303)
+  tau.eps ~ dunif(0, 2.303)
+
+  sig.zeta = 1/tau.zeta
+  sig.w2 = 1/tau.w2
+  sig.alpha = 1/tau.alpha
+  sig.e = 1/tau.e
+  sig.eps = 1/tau.eps
+  
+
+  # likelihood
+
+  # state process
+
+  # summer
+  for(x in 1:numspecs){
+    for (t in 1:(N-1)){
+      zeta[t,x] ~ dnorm(0, tau.zeta)
+      w[t,x] ~ dnorm(0, tau.w2)
+      eps[t,x] ~ dnorm(0, tau.eps)
+
+      beta[t+1,x] = beta[t,x] + zeta[t,x]
+      
+      lambda[t+1,x] = lambda[t,x] + eps[t,x] # winter to summer ratio
+    }
+  }
+  
+  # summer
+  for(x in 1:numspecs){
+    for(t in 1:(N-1)){
+      mu_t[t+1,x] = mu_t[t,x] + beta[t,x] + w[t,x]
+      real_mu[t+1, x] = exp(mu_t[t+1,x]) # off the log scale
+      
+    }
+  }
+
+  # winter
+  for(x in 1:numspecs){
+    for(t in 1:N){
+      mu_wt[t,x] = mu_t[t,x] + lambda[t,x]
+      real_muw[t,x] = exp(mu_wt[t,x])
+      
+    }
+  }
+  
+  # observation process
+
+  # summer
+  for(x in 1:numspecs){
+    for(s in 1:N){
+      summer[s,x] ~ dnorm(mu_t[s,x], tau.alpha) # Summer counts
+    }
+  }
+
+  # winter
+  for(x in 1:numspecs){
+    for(w in 1:N){
+      winter[w,x] ~ dnorm(mu_wt[w,x], tau.e) # winter counts
+    }
+  }
+
+
+  
+  # obtain the proportions of each species in the group
+  
+  for(x in 1:numspecs){
+    for(i in 1:N){
+      # summer props
+      #summer_props[i,x] = mu_t[i,x]/sum(mu_t[i,])
+      summer_props[i,x] = real_mu[i,x]/sum(real_mu[i,])
+    
+      # winter props
+      #winter_props[i,x] = mu_wt[i,x]/sum(mu_wt[i,])
+      winter_props[i,x] = real_muw[i,x]/sum(real_muw[i,])
+    }
+  }
+  
+  # calculate the hill numbers values based on the proportions
+  
+  # N0 - total number of species present
+  for(i in 1:N){
+    summer_n0[i] = sum(summer_props[i,]**0)**(1/(1-0))
+    
+    winter_n0[i] = sum(summer_props[i,]**0)**(1/(1-0))
+  }
+  
+  # N1 - Shannons entropy (returns H and must be exponentiated)
+  for(i in 1:N){
+    summer_n1[i] = -sum(summer_props[i,] * log(summer_props[i,]))
+  
+    winter_n1[i] = -sum(winter_props[i,] * log(winter_props[i,]))
+  }
+  
+  # N2 - recipricol of the simpson index
+  for(i in 1:N){
+    summer_n2[i] = sum(summer_props[i,]**2)**(1/(1-2))
+  
+    winter_n2[i] = sum(winter_props[i,]**2)**(1/(1-2))
+  }
+  
+}
+
+
+

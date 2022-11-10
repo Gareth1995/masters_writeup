@@ -1,0 +1,23 @@
+---
+title: "Appendix C"
+subtitle: "Convergence visualisations based on the Egyptian Goose"
+output: pdf_document
+---
+
+# Variance Parameters
+
+```{r echo=FALSE, out.width="49%", out.height="20%",fig.show='hold',fig.align='center'}
+
+knitr::include_graphics(c("plots/goose_sigma_alpha.png", "plots/goose_sigma_e.png", "plots/goose_sigma_w.png", "plots/goose_sigma_zeta.png", "plots/goose_sigma_eps.png"))
+
+```
+\newpage
+
+# Count Estimates
+
+```{r, echo=FALSE, out.width="49%", out.height="20%",fig.show='hold',fig.align='center'}
+
+knitr::include_graphics(c("plots/mu1.png", "plots/mu2.png", "plots/mu3.png", "plots/mu4.png", "plots/mu5.png"))
+
+```
+

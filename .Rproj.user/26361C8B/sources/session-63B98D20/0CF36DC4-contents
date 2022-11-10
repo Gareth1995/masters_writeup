@@ -1,0 +1,52 @@
+---
+title: "Appendix A"
+subtitle: "Waterbird species (with 13 or more non-zero counts) found in the Coordinated Waterbird Counts (CWAC) records for Barberspan wetland and their various traits"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(results = 'asis')
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.keep = 'all')
+
+library(dplyr)
+library(knitr)  
+library(kableExtra) 
+library(tidyverse)
+
+source("R/cwac_functions.r")
+
+# load relevant data
+load('data/robertsDB.RData')
+load('data/barberspan.counts.RData')
+
+birdcnts <- bp_counts[,1:103]
+
+# counting all the observations with 0 count
+barbernas <- apply(birdcnts, 2, function(x){
+  return(x==0)
+})
+barbernas
+
+barber0s = apply(barbernas, 2, sum, na.rm = T) # sum the number of 0 counts per bird
+less13 = names(barber0s[barber0s>19]) # extract names of the birds with 13 or more counts
+
+#df <- robertsDB %>% select(everything())
+newRobert <- robertsDB[!robertsDB$SppRef %in% less13,] # extract only species with 13 or more counts
+
+robertsDB <- newRobert %>%
+  mutate(`Num foraging sites` = numForage) %>%
+  select(-SppRef,-`Foraging substratum`,-numForage)
+  
+
+
+```
+
+```{r}
+kable(robertsDB, 'pipe', align = 'l')
+
+```

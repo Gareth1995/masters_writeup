@@ -1,0 +1,78 @@
+# Model 2: Migratory Birds
+
+model {
+
+  # Priors
+  mu_t[1] ~ dunif(0,7.313) # prior for initial population size
+  beta[1] ~ dunif(log(0.5), log(1.7)) # prior for initial growth rate
+  lambda[1] ~ dnorm(0, 0.001)
+  q[1] = 1
+
+  tau.zeta ~ dunif(0, 2.303)
+  tau.w2 ~ dunif(0, 2.303)
+  tau.alpha ~ dunif(0, 2.303)
+  tau.e ~ dunif(0, 2.303)
+  tau.eps ~ dunif(0, 2.303)
+
+  sig.zeta = 1/tau.zeta
+  sig.w2 = 1/tau.w2
+  sig.alpha = 1/tau.alpha
+  sig.e = 1/tau.e
+  sig.eps = 1/tau.eps
+
+  # likelihood
+
+  # state process
+
+  # summer
+  for (t in 1:(N-1)){
+    zeta[t] ~ dnorm(0, tau.zeta)
+    w[t] ~ dnorm(0, tau.w2)
+
+    beta[t+1] = beta[t] + zeta[t]
+    mu_t[t+1] = mu_t[t] + beta[t] + w[t]
+  }
+
+  # winter
+  for (t in 1:(N-1)){
+    eps[t] ~ dnorm(0, tau.eps)
+    lambda[t+1] = lambda[t] + eps[t] # winter to summer ratio
+  }
+
+  # observation process
+
+  # summer
+  for(s in 1:N){
+    summer[s] ~ dnorm(mu_t[s], tau.alpha) # Summer counts
+    
+  }
+
+  # winter
+  for(w in 1:N){
+    mu_wt[w] = mu_t[w] + lambda[w]
+    winter[w] ~ dnorm(mu_wt[w], tau.e) # winter counts
+  }
+  
+  # calculating annual rate of change
+  #for(i in 2:N){
+  #  d[i] = log(exp(mu_t[i])/exp(mu_t[i-1]))
+  #}
+  
+  # LPI for each species 
+  #for(i in 2:N){
+  #  index[i] = index[i-1] * exp(d[i])
+  #}
+  
+  # percent increase or decrease per year (negative sign means decrease)
+  for(i in 2:N){
+    q[i] = exp(mu_t[i]) - exp(mu_t[i-1]) / exp(mu_t[i-1]) # percentage change per year
+    
+    # percentage change compared to last year
+    #p[i] = (exp(mu_t[i]) - exp(mu_t[N])) / exp(mu_t[N])
+    
+    #p[i] = mu_t[i] - mu_t[N]
+    
+    # percentage change from reference year
+    #p[i] = (exp(mu_t[i]) - exp(mu_t[5])) / exp(mu_t[5])
+  }
+}

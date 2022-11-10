@@ -1,0 +1,53 @@
+# Model 2: Migratory Birds
+
+model {
+
+  # Priors
+  mu_t[1] ~ dunif(log(1),log(1500)) # prior for initial population size
+  beta[1] ~ dunif(log(1),log(100)) # prior for initial growth rate
+  lambda[1] ~ dnorm(0, 0.001)
+  
+  tau.zeta ~ dunif(log(1), log(10))
+  tau.w2 ~ dunif(log(1), log(10))
+  tau.alpha ~ dunif(log(1), log(10))
+  tau.e ~ dunif(log(1), log(10))
+  tau.eps ~ dunif(log(1), log(10))
+  
+  sig.zeta = 1/tau.zeta
+  sig.w2 = 1/tau.w2
+  sig.alpha = 1/tau.alpha
+  sig.e = 1/tau.e
+  sig.eps = 1/tau.eps
+
+
+  # likelihood
+  # state process
+  for (t in 1:(n-1)){
+    zeta[t] ~ dnorm(0, sig.zeta)
+    w[t] ~ dnorm(0, sig.w2)
+    eps[t] ~ dnorm(0, sig.eps)
+    
+    beta[t+1] = beta[t] + zeta[t]
+    mu_t[t+1] = mu_t[t] + beta[t] + w[t]
+  }
+  
+  for (t in 1:(wlength-1)){
+    lambda[t+1] = lambda[t] + eps[t] # winter to summer ratio
+  }
+  
+  # observation process
+  # summer
+  for(s in 1:slength){
+    alpha[s] = dnorm(0, 0, tau.alpha)
+    summer[s] ~ dnorm(mu_t[s], alpha[s]) # Summer counts
+    #summer[s] ~ dpois(lambda.pois.s)
+  }
+  
+  for(w in 1:wlength){
+    e[w] = dnorm(0, 0, tau.e)
+    winter[w] ~ dnorm(mu_t[w] + lambda[w], e[w]) # winter counts
+    winterState[w] = mu_t[w] + lambda[w]
+    #winter[w] ~ dpois(lambda.pois.w)
+  }
+  
+}

@@ -1,0 +1,175 @@
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/aq_sum.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/aq_win.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/aq_lpi_CI.png}
+  \end{subfigure}
+  \caption{The first two plots are from the SSM output applied to the combined counts of the waterbirds that nest in an aquatic environment, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/cav_sum.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/cav_win.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/cav_ind_CI.png}
+  \end{subfigure}
+  \caption{The first two plots are from the SSM output applied to the combined counts of the waterbirds that nest in cavities, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/div_sum.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/div_win.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/div_ind_CI.png}
+  \end{subfigure}
+  \caption{The first two plots are from the SSM output applied to the combined counts of the waterbirds that make their nests in diverse environments, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/ground_sum.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/ground_win.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/ground_ind_CI.png}
+  \end{subfigure}
+  \caption{The first two plots are from the SSM output applied to the combined counts of the waterbirds that nest by creating recessions in the ground, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/reed_sum.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/reed_win.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/reed_ind_CI.png}
+  \end{subfigure}
+  \caption{The first two plots are from the SSM output applied to the combined counts of the waterbirds that make their nests amongst the reeds, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/shrub_sum.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/shrub_win.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/shrub_lpi_CI.png}
+  \end{subfigure}
+  \caption{The first two plots are from the SSM output applied to the combined counts of the waterbirds that nest in shrubs, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/tree_sum.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/tree_win.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/tree_ind_CI.png}
+  \end{subfigure}
+  \caption{The first two plots are from the SSM output applied to the combined counts of the waterbirds that nest in trees, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/one_sum.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/one_win.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/one_ind_CI.png}
+  \end{subfigure}
+  \caption{The first two plots are from the SSM output applied to the combined counts of the waterbirds that utilise only one foraging site, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/two_sum.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/two_win.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/two_ind_CI.png}
+  \end{subfigure}
+  \caption{The first two plots are from the SSM output applied to the combined counts of the waterbirds that utilise two different foraging sites, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/three_sum.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/three_win.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/three_ind_CI.png}
+  \end{subfigure}
+  \caption{The first two plots are from the SSM output applied to the combined counts of the waterbirds that utilise two different foraging sites, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/four_sum.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/four_win.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.5\textheight}
+    \includegraphics[width=0.5\textheight,height= \textwidth]{D:/Thesis/writeup/plots/four_ind_CI.png}
+  \end{subfigure}
+  \caption{The first two plots are from the SSM output applied to the combined counts of the waterbirds that utilise four different foraging sites, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.}
+\end{figure}
+\end{figure}

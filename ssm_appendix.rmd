@@ -1,0 +1,170 @@
+---
+title: "Appendix B"
+subtitle: "State-space time series output for each waterbird found in the Coordinated Waterbird Counts (CWAC) records for Barberspan"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(results = 'hide')
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.keep = 'all')
+
+library(dplyr)
+
+source("R/cwac_functions.r")
+```
+
+## Residents
+```{r individual_residents}
+
+# load relevant data
+load('data/robertsDB.RData')
+load('data/barberspan.counts.RData')
+
+birdcnts <- bp_counts[,1:103]
+
+# counting all the observations with 0 count
+barbernas <- apply(birdcnts, 2, function(x){
+  return(x==0)
+})
+#barbernas
+
+barber0s = apply(barbernas, 2, sum, na.rm = T) # sum the number of 0 counts per bird
+less13 = names(barber0s[barber0s>19]) # extract names of the birds with 13 or more counts
+
+#df <- robertsDB %>% select(everything())
+newRobert <- robertsDB[!robertsDB$SppRef %in% less13,] # extract only species with 13 or more counts
+
+# separate into resident and migrant
+resid <- newRobert %>%
+  filter(Migrant=="n") %>%
+  select(SppRef, `Common name`)
+
+migid <- newRobert %>%
+  filter(Migrant=="y") %>%
+  select(SppRef, `Common name`)
+
+residents <- birdcnts[,resid$SppRef]
+migrants <- birdcnts[,migid$SppRef]
+
+colnames(residents) <- resid$`Common name`
+colnames(migrants) <- migid$`Common name`
+
+res.jags <- list()
+#length(residents)
+for (i in 1:length(residents)){
+  res.jags[[i]] <- jags_analysis(as.data.frame(cbind(residents[,i],
+                                          'Season' = bp_counts$Season,
+                                          'Year' = bp_counts$Year)))
+}
+```
+
+
+```{r resident_plots, fig.height = 8, fig.width = 15}
+
+negs <- 0
+pos <- 0
+numsigs <- 0
+betas <- c()
+for(i in 1:length(res.jags)){
+  
+  # Check to see if positive or negative trend
+  
+  meanb <- mean(res.jags[[i]]$mean$beta)
+  betas <- c(betas, meanb)
+  
+  if(meanb<0){
+    negs <- negs+1
+  }else{
+    pos <- pos+1
+  }
+  
+  
+  # check if trend is significant
+  lb <- mean(res.jags[[i]]$q2.5$beta)
+  ub <- mean(res.jags[[i]]$q97.5$beta)
+  
+  
+  # is significant
+  if((lb>0 & ub>0) | (lb<0 & ub<0)){
+    numsigs <- numsigs+1
+    rplot <- ts_jag_plot(res.jags[[i]],
+              as.data.frame(cbind(residents[,i],
+                                  'Season' = bp_counts$Season,
+                                  'Year' = bp_counts$Year)),
+              paste0(colnames(residents)[i], " (Avg slope = ",round(meanb,2),")", "*"))
+  }else{
+   rplot <- ts_jag_plot(res.jags[[i]],
+              as.data.frame(cbind(residents[,i],
+                                  'Season' = bp_counts$Season,
+                                  'Year' = bp_counts$Year)),
+              paste0(colnames(residents)[i]," (Avg slope = ",round(meanb,2),")"))
+  }
+  print(rplot)
+}
+
+```
+
+## Migrants
+
+```{r individual_migrants}
+
+mig.jags <- list()
+
+for (i in 1:length(migrants)){
+  mig.jags[[i]] <- jags_analysis(as.data.frame(cbind(migrants[,i],
+                                          'Season' = bp_counts$Season,
+                                          'Year' = bp_counts$Year)))
+}
+
+```
+
+```{r migrant_plots, fig.height = 8, fig.width = 15}
+
+negs_m <- 0
+pos_m <- 0
+numsigs_m <- 0
+betas_m <- c()
+for(i in 1:length(mig.jags)){
+
+  # Check to see if positive or negative trend
+
+  meanb_m <- mean(mig.jags[[i]]$mean$beta)
+  betas_m <- c(betas_m, meanb_m)
+
+  if(meanb_m<0){
+    negs_m <- negs_m+1
+  }else{
+    pos_m <- pos_m+1
+  }
+
+
+  # check if trend is significant
+  lb_m <- mean(mig.jags[[i]]$q2.5$beta)
+  ub_m<- mean(mig.jags[[i]]$q97.5$beta)
+
+
+  # is significant
+  if((lb_m>0 & ub_m>0) | (lb_m<0 & ub_m<0)){
+    numsigs_m <- numsigs_m+1
+    mplot <- ts_jag_plot(mig.jags[[i]],
+                         as.data.frame(cbind(migrants[,i],
+                                             'Season' = bp_counts$Season,
+                                             'Year' = bp_counts$Year)),
+                         paste(colnames(migrants)[i], "**", "(Avg Slope =", round(meanb_m,2),")"))
+  }else{
+    mplot <- ts_jag_plot(mig.jags[[i]],
+                         as.data.frame(cbind(migrants[,i],
+                                             'Season' = bp_counts$Season,
+                                             'Year' = bp_counts$Year)),
+                         paste(colnames(migrants)[i], "(Avg Slope =", round(meanb_m,2),")"))
+  }
+  print(mplot)
+
+}
+
+```
+

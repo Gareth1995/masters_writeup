@@ -1,0 +1,156 @@
+---
+title: " "
+output:
+  pdf_document:
+    number_sections: TRUE
+    
+geometry: "left = 2.5cm, right = 2cm, top = 2cm, bottom = 2cm"
+fontsize: 11pt
+header-includes:
+  - \usepackage{float}
+  - \usepackage{sectsty}
+  - \usepackage{amsmath}
+  - \usepackage{paralist}
+  - \usepackage{setspace}\spacing{1.5}
+  - \usepackage{fancyhdr}
+  - \usepackage{lastpage}
+  - \usepackage{dcolumn}
+  - \usepackage{natbib}\bibliographystyle{apa}
+  - \usepackage[nottoc, numbib]{tocbibind}
+  - \usepackage{graphicx}
+  - \usepackage{subcaption}
+  - \usepackage[font=small,labelfont=bf]{caption}
+bibliography: bibliography.bib
+nocite: |
+  @ConventionBiologicalDiversity2020
+  @fitzpatrickinstituteofafricanornithologyCWACCoordinatedWaterbird2020
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\allsectionsfont{\raggedright}
+\subsectionfont{\raggedright}
+\subsubsectionfont{\raggedright}
+
+\pagenumbering{gobble}
+
+\begin{centering}
+
+\vspace{3cm}
+
+```{r uni_logo, echo=FALSE, out.width="20%"}
+knitr::include_graphics("img/UCTlogo.png")
+```
+
+\vspace{1cm}
+
+\Large
+{\bf The University of Cape Town}
+
+\Large
+{\bf Department of Statistical Sciences}
+
+\Large
+{\bf Faculty of Science}
+
+\vspace{1cm}
+
+\Large
+\doublespacing
+{\bf Using state-space time series analysis on wetland bird species to formulate effective bioindicators in the Barberspan wetland}
+
+\vspace{1 cm}
+
+\normalsize
+\singlespacing
+By
+
+\vspace{0.5 cm}
+
+\Large
+
+{\bf Gareth Edwards}
+
+\normalsize
+Supervisors
+
+\Large
+{\bf Res Altwegg}\\{\bf Birgit Erni}
+
+\vspace{1.5 cm}
+
+Minor Dissertation presented for the degree of M.Sc. Data Science \\ in the \\ Department of Statistical Sciences \\ Faculty of Science \\ University of Cape Town
+
+\vspace{1.5 cm}
+
+\normalsize
+January 2022
+
+\end{centering}
+
+\newpage
+
+\pagenumbering{gobble}
+
+\begin{centering}
+
+{\bf Abstract}
+
+\end{centering}
+
+\spacing{1.5}
+
+The Coordinated Waterbird Count dataset (CWAC) is a dataset containing waterbird counts from wetlands across South Africa, going as far back as 1970. These data contain valuable information on population sizes and their trends over time. This information could be used more widely if it was more easily accessible to users. The aim of this dissertation is to bridge the gap between the CWAC dataset and the end users (for both experts and non-experts). In so doing the report also provides valuable insight into the state of wetlands in South Africa using various biodiversity indices, starting with Barberspan wetland as the pilot study site. A state-space time series model was applied to the waterbird counts in the CWAC dataset to determine waterbird population trends over the years. State-space models are able to separate observation error from true population process error, thus providing a more accurate estimation of true population size. This qualifies state-space models as an ideal tool for population dynamics. The state-space model produced estimates of true population size for each waterbird per year. Three different indices were applied to the estimates, namely, exponentiated Shannon’s index, Simpson’s index and a modified Living Planet Index. These indices aggregate the count data to a measure of effective number of waterbirds in an ecosystem, a measure of evenness of an ecosystem, and an abundance index respectively. Using these three indices, in conjunction with each other, and individual waterbird species as bioindicators for various wetland traits, the end user is presented with a broad overview of the state of the Barberspan wetland. The implication of this research is beneficial to various wetland conservation organisations globally (AEWA, Aichi, RAMSAR) and locally (Working for Wetlands), as it provides valuable insight into the state of wetlands of South Africa. Furthermore, it helps managers at a local level in their decision making to enable more evidence-based approaches to protect South African wetlands and its waterbirds.
+
+\pagenumbering{roman}
+
+\newpage
+
+\centering
+\raggedright
+\newpage
+\tableofcontents
+
+\newpage
+
+```{r acknowledgments, child='acknowledgments.Rmd'}
+```
+
+\newpage
+
+\pagenumbering{arabic}
+```{r intro, child = 'introduction.Rmd'}
+```
+
+
+\newpage
+
+```{r methods, child = 'methods.Rmd'}
+```
+
+\newpage
+
+```{r results, child = 'results.Rmd'}
+```
+
+\newpage
+
+```{r discussion, child = 'discussion.Rmd'}
+```
+
+<!-- \newpage -->
+
+<!-- ```{r conclusion, child = 'conclusion.Rmd'} -->
+<!-- ``` -->
+
+\newpage
+
+```{r biblio, child = 'bibliography.Rmd'}
+```
+
+<!-- \newpage -->
+
+<!-- ```{r appendix, child = 'appendix.Rmd'} -->
+<!-- ``` -->

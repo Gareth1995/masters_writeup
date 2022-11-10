@@ -1,0 +1,981 @@
+---
+title: " "
+output: pdf_document
+---
+
+```{r results_setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(results = 'hide')
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.keep = 'all')
+#knitr::opts_chunk$set(fig.pos = 'H')
+knitr::opts_chunk$set(fig.pos = "!H", out.extra = "")
+
+library(cowplot)
+library(ggplot2)
+
+source("R/cwac_functions.r")
+library(knitr)
+library(vegan)
+library(tidyverse)
+library(cowplot)
+#
+# load relevant data
+load('data/robertsDB.RData')
+load('data/barberspan.counts.RData')
+
+birdcnts <- bp_counts[,1:103]
+
+# counting all the observations with 0 count
+barbernas <- apply(birdcnts, 2, function(x){
+  return(x==0)
+})
+barbernas
+
+barber0s = apply(barbernas, 2, sum, na.rm = T) # sum the number of 0 counts per bird
+less13 = names(barber0s[barber0s>19]) # extract names of the birds with 13 or more counts
+
+#df <- robertsDB %>% select(everything())
+newRobert <- robertsDB[!robertsDB$SppRef %in% less13,] # extract only species with 13 or more counts
+
+# separate into resident and migrant
+resid <- newRobert %>%
+  filter(Migrant=="n") %>%
+  select(SppRef)
+
+migid <- newRobert %>%
+  filter(Migrant=="y") %>%
+  select(SppRef)
+
+residents <- birdcnts[,resid$SppRef]
+migrants <- birdcnts[,migid$SppRef]
+
+
+```
+
+# Results
+
+The first and foremost objective was to develop and fit a relevant state-space model to the waterbird counts in the Barberspan wetland. The model discussed in the methods section was developed and fitted using the JAGS framework in R. This model was able to account for seasonal fluctuations in the count data. This applies specifically to the palearctic and intra-African migrants. The same model was applied to the resident species to fit potential seasonal patterns caused by the observation process.
+
+When running the SSM on all of the waterbird counts in Barberspan, it was found that the variance parameters didn't converge for waterbirds with fewer than 13 non-zero counts. As a result, these birds were left out of the study. The SSM was then applied to the remaining waterbirds (41 resident and 14 migrant waterbirds). The model was applied to each individual resident and migrant species and then to the summed resident counts and summed migrant counts. Applying the SSM to the combined counts gives an overview of the population dynamics of the Barberspan wetland. When applied to individual species, it provides a more in depth analysis of the population dynamics on the species level. This is done with the user in mind. It is important to display as much information as possible for the user. Displaying only aggregated metrics often hides finer details that may be of importance.
+
+## State-Space Model Output
+
+The SSM was applied to the combined counts of resident species and then applied to the combined migrant species. The SSM models two time series, one for summer and one for winter. Figure 6 and 7 display the output of the SSM on the combined waterbird counts at the Barberspan wetland.
+
+```{r bspanTrend}
+
+# CAPTION THE IMAGE DESCRIBING THAT THE GREY IS A 95% CI
+
+# LABEL AXIS
+
+# tallying counts for overall analysis of barberspan
+
+# residents
+# allresidents <- apply(residents, 1, sum, na.rm = T)
+# allresidents <- as.data.frame(cbind(allresidents,
+#                                  'Season' = bp_counts$Season,
+#                                  'Year' = bp_counts$Year))
+# allresidents[allresidents==0] <- NA
+# 
+# allresidents$allresidents <- as.numeric(allresidents$allresidents)
+# 
+# # migrants
+# allmigrants <- apply(migrants, 1, sum, na.rm = T)
+# allmigrants <- as.data.frame(cbind(allmigrants,
+#                                  'Season' = bp_counts$Season,
+#                                  'Year' = bp_counts$Year))
+# allmigrants[allmigrants==0] <- NA
+# 
+# # run jags on barberspan area
+# bspan.residents <- jags_analysis(allresidents)
+# bspan.migrants <- jags_analysis(allmigrants)
+# 
+# 
+# 
+# # plot
+# #par(mfrow=c(1,2))
+# resplots <- ts_jag_plot(bspan.residents, allresidents, "residents")
+# migplots <- ts_jag_plot(bspan.migrants, allmigrants, "migrants")
+# 
+# resplots$summer
+# resplots$winter
+# 
+# migplots$summer
+# migplots$winter
+
+```
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{\textwidth}
+    \includegraphics[width=\textwidth]{D:/Thesis/writeup/plots/res_sum_plot.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{\textwidth}
+    \includegraphics[width=\textwidth]{D:/Thesis/writeup/plots/res_winter_plot.png}
+  \end{subfigure}
+  \caption {SSM output applied to the combined resident counts at Barberspan wetland, separated by season. The grey area surrounding the black dotted line is the 95\% credible interval around the population level produced by the MCMC output.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{\textwidth}
+    \includegraphics[width=\textwidth]{D:/Thesis/writeup/plots/migrant_sum_plot.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{\textwidth}
+    \includegraphics[width=\textwidth]{D:/Thesis/writeup/plots/migrant_winter_plot.png}
+  \end{subfigure}
+  \caption {SSM output applied to the combined migrant counts at Barberspan wetland, separated by season. The grey area surrounding the black dotted line is the 95\% credible interval around the population level produced by the MCMC output.}
+\end{figure}
+
+Neither model shows significant change over time. The migrant population seems to increase gradually from 1993 till around 2014, after which it experiences a drop in counts. This change in trend is however based only on one count. The resident summer population, on average, displays a positive rate of change over time. The interval estimate of the average rate of change across all the years for the migrant population is [-1.23, 1.28]. The model only focuses on rate of change in the summer counts and models the winter counts as the proportion of species that remain from summer. The interval estimate of the average rate of change across all years for the resident population is [-1.19, 1.32]. These interval values are obtained from the posterior distribution by taking the 2.5th and the 97.5th percentile.
+
+Appendix B shows the state-space model's output when applied to each individual waterbird species. When considering average trends from 1993 to 2018, 35 out of the 41 resident species analysed in Barberspan show positive trends. The other six exhibit no trend or a negative trend. However, none of these trends are statistically significant.
+
+The migratory species display the same number of negative trends and positive trends. seven out of the 14 analysed migratory species exhibit decreasing trends and seven exhibit increasing trends.
+
+It is interesting to note that when the model is applied to the combined migrant counts, a positive average rate of change is seen. This shows how aggregating species count data can hide important aspects at the individual species level. This is one of the criticisms of indices that are based on species aggregation such as the Living Planet Index (LPI) [@ritchieBiodiversity2021]. The LPI tends to be very sensitive to sharp population increases or decreases. For example, if two out of five waterbirds increase drastically while the other three decrease gradually; the LPI will aggregate the trends in such a way that it will indicate a sharp increase for all five species which is misleading [@ritchieBiodiversity2021]. To create an effective data dashboard (as the BIRDIE project aims to do) it is essential to have information on individual species and information on an aggregated level.
+
+## Abundance Indices
+
+Despite the criticism of abundance indices such as the LPI, it is still the most popular abundance index. The LPI was developed to track global species population change over time [@collenMonitoringChangeVertebrate2009]. This was in response to the Convention on Biological Diversity targets set out in 2010, which aims to reduce the loss of biodiversity on the planet. Due to the popularity of the LPI, a modified LPI was used in this report to track aggregated population change over time for the waterbirds.
+
+The modified LPI was applied to various groups of waterbirds. These groups were based on nest site, number of different foraging locations and migratory status. For each group the SSM would be applied to each individual waterbird. The posterior output from the MCMC for each waterbird was then summed together across the group, and the modified LPI was then applied to the summed posteriors. The median, 2.5th and 97.5th percentile was then calculated and displayed in figure 8 to figure 20.
+
+
+```{r show_index}
+
+# LABEL Y AXIS AS "PERCENTAGE CHANGE"
+
+# ADD MORE DETAIL TO IMAGE DESCRIPTION
+
+# migtype_trends <- function(traitsdf, countsdf, mig, title){
+# 
+#   # traitsdf <- robertsDB
+#   # countsdf <- bp_counts
+#   # mig <- "y"
+#   # title <- "a title"
+# 
+#   # extract species with certain trait
+#   Ids <- traitsdf[which(traitsdf$Migrant==mig),]$SppRef
+#   t <- countsdf[,Ids]
+# 
+#   # run jags on each species in trait group
+#   trait_species <- list()
+# 
+#   for (i in 1:length(t)){
+#     trait_species[[i]] <- jags_analysis(as.data.frame(cbind(t[,i],
+#                                                       'Season' = countsdf$Season,
+#                                                       'Year' = countsdf$Year)))
+#   }
+# 
+# 
+#   # extract mu values of each bird in group
+#   mu <- lapply(trait_species, function(x){
+#     return(x$mean$mu_t)
+#   })
+# 
+#   # percentage change for each species in a group per year
+#   grp_change <- list()
+# 
+#   for(i in 1:length(mu)){
+#     perc_change <- c(0)
+# 
+#     for(x in 2:length(mu[[i]])){
+#       perc_change[x] = ((exp(mu[[i]][x]) - exp(mu[[i]][x-1])) / exp(mu[[i]][x-1]))*100
+#     }
+#       grp_change[[i]] <- perc_change
+#   }
+# 
+#   # convert list of yearly percentage changes to a df
+#   grp_change <- as.data.frame(grp_change)
+#   colnames(grp_change) <- colnames(t)
+#   
+#   # get average yearly percentage change for each year
+#   peryr.avg <- apply(grp_change, 1, mean)
+#   
+#   # place average yearly percentages in df and plot
+#   peryrdf <- as.data.frame(peryr.avg)
+#   
+# 
+#   peryr.plot <- ggplot(peryrdf, aes(x = Year, group = 1)) +
+#     geom_line(aes(y = index, color = "grey1"), lwd = 1) +
+#     geom_hline(yintercept=0, linetype = 'dashed') +
+#     scale_x_continuous(breaks = seq(min(peryrdf$Year), max(peryrdf$Year), by = 1)) +
+#     labs(title = title, y = "Average yearly percentage change", x = "") +
+#     theme(axis.text.x = element_text(angle = 90),
+#           legend.position = 'none')
+# 
+#   return(list("jag.mods" = trait_species,
+#               "peryr.plot" = peryr.plot,
+#               "indices" = peryr.avg))
+# }
+# 
+# migtrends <- migtype_trends(robertsDB, bp_counts, "y", "Migrant population percentage change over time")
+
+
+```
+
+```{r migtrends_wCI}
+
+# finding yearly change per year for migrant group
+# extract species with certain trait
+# migtype_trends <- function(traitsdf, countsdf, mig, title, ylab, xlab, trait){
+# 
+#   # traitsdf <- robertsDB
+#   # countsdf <- bp_counts
+#   # mig <- "Aquatic"
+#   # title <- ""
+#   # trait = "nest"
+# 
+#   if (trait == "migrant"){
+#     Ids <- traitsdf[which(traitsdf$Migrant==mig),]$SppRef
+#     t <- countsdf[,Ids]
+#   }else if(trait == "nest"){
+#     Ids <- traitsdf[which(traitsdf$`Nest site`==mig),]$SppRef
+#     t <- countsdf[,Ids]
+#   }else if(trait == "forage"){
+#     Ids <- traitsdf[which(traitsdf$numForage==mig),]$SppRef
+#     t <- countsdf[,Ids]
+#   }
+# 
+# 
+#   # run jags on each species in trait group
+#   trait_species <- list()
+# 
+#   for (i in 1:length(t)){
+#     trait_species[[i]] <- jags_analysis(as.data.frame(cbind(t[,i],
+#                                                           'Season' = countsdf$Season,
+#                                                           'Year' = countsdf$Year)))
+#   }
+# 
+#   # sum together all sim lists
+#   migtot <- data.frame(matrix(0, 9000, 26))
+#   for(i in 1:length(trait_species)){
+# 
+#     migtot <- migtot + trait_species[[i]]$sims.list$mu_t
+# 
+#   }
+# 
+#   # loop through sims list to find lower median and upper quantile of percentage change
+#   perc_change <- data.frame(lower = 0, med = 0, upper = 0)
+#   for(x in 2:26){
+#     # using median and lower and upper quantile
+#     perc_change[x,] = quantile(((migtot[,x] - migtot[,x-1]) / (migtot[,x-1]))*100, c(0.025,0.5,0.975))
+#   }
+#   perc_change <- cbind(perc_change, "Year" = unique(bp_counts$Year))
+# 
+#   # plotting the output
+#   yrlychange.plot <- ggplot(perc_change, aes(x = Year)) +
+#     geom_ribbon(aes(ymin = lower, ymax = upper), fill = "gray80") +
+#     geom_line(aes(y = med, color = "red"), lwd = 1) +
+#     geom_hline(yintercept=0, linetype = 'dashed') +
+#     scale_x_continuous(breaks = seq(min(perc_change$Year), max(perc_change$Year), by = 1)) +
+#     #scale_y_continuous(breaks = round(seq(min(perc_change$lower), max(perc_change$upper), by = 10),0)) +
+#     labs(title = title, y = ylab, x = xlab) +
+#     theme(axis.text.x = element_text(angle = 90),
+#           legend.position = 'none')
+# 
+#   return(list("jag.mods" = trait_species,
+#               "peryr.plot" = yrlychange.plot,
+#               "indices" = perc_change))
+# }
+```
+
+
+```{r}
+# migtrends <- migtype_trends(newRobert, bp_counts, "y", "Migrant population percentage change over time", ylab = "Average yearly percentage change over time", xlab = "Years", "migrant")
+# 
+# 
+# restrends <- migtype_trends(newRobert, bp_counts, "n", "Resident population percentage change over time", ylab = "Average yearly percentage change over time", xlab = "Years", "migrant")
+# 
+# NEST SITES
+# aq.nest <- migtype_trends(newRobert, bp_counts, 'Aquatic', '', ylab = 'modified LPI', xlab = 'Years', 'nest')
+# cav.nest <- migtype_trends(newRobert, bp_counts, 'Cavity', '', ylab = 'modified LPI', xlab = 'Years', 'nest')
+# div.nest <- migtype_trends(newRobert, bp_counts, 'Diverse', '', ylab = 'modified LPI', xlab = 'Years', 'nest')
+# grass.nest <- migtype_trends(newRobert, bp_counts, 'Grass', '', ylab = 'modified LPI', xlab = 'Years', 'nest') # There're no grass types after removing 13 or less count birds
+# ground.nest <- migtype_trends(newRobert, bp_counts, 'Ground', '', ylab = 'modified LPI', xlab = 'Years', 'nest')
+# reed.nest <- migtype_trends(newRobert, bp_counts, 'Reed', '', ylab = 'modified LPI', xlab = 'Years', 'nest')
+# shrub.nest <- migtype_trends(newRobert, bp_counts, 'Shrub', '', ylab = 'modified LPI', xlab = 'Years', 'nest')
+# tree.nest <- migtype_trends(newRobert, bp_counts, 'Tree', '', ylab = 'modified LPI', xlab = 'Years', 'nest')
+# # 
+# # Foraging sites
+# one.type <- migtype_trends(newRobert, bp_counts, 1, '', ylab = 'modified LPI', xlab = 'Years', 'forage')
+# two.types <- migtype_trends(newRobert, bp_counts, 2, '', ylab = 'modified LPI', xlab = 'Years', 'forage')
+# three.types <- migtype_trends(newRobert, bp_counts, 3, '', ylab = 'modified LPI', xlab = 'Years', 'forage')
+# four.types <- migtype_trends(newRobert, bp_counts, 4, '', ylab = 'modified LPI', xlab = 'Years', 'forage')
+
+
+```
+
+```{r}
+# restrends$peryr.plot
+# migtrends$peryr.plot
+# 
+# aq.nest$peryr.plot
+# cav.nest$peryr.plot
+# div.nest$peryr.plot
+# grass.nest$peryr.plot # no grass plots when removing counts less than 13
+# ground.nest$peryr.plot
+# reed.nest$peryr.plot
+# shrub.nest$peryr.plot
+# tree.nest$peryr.plot
+# 
+# one.type$peryr.plot
+# two.types$peryr.plot
+# three.types$peryr.plot
+# four.types$peryr.plot
+
+# round(mean(migtrends$indices[2:26]),2)
+# round(mean(restrends$indices[2:26]),2)
+```
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.6\textwidth}
+    \includegraphics[width=\textwidth]{D:/Thesis/writeup/plots/res_index_CI.png}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.6\textwidth}
+    \includegraphics[width=\textwidth]{D:/Thesis/writeup/plots/mig_index_CI.png}
+  \end{subfigure}
+  \caption {The modified LPI displaying the average yearly percentage change averaged across all resident waterbirds (top) and all migrant waterbirds (bottom) at Barberspan wetland based on trend estimates produced by a state-space time series model. The grey area around the trend line represents the 2.5th and 97.5th percentile.}
+\end{figure}
+
+The resident waterbirds displayed an average yearly percentage increase of 11.71% while the migratory waterbirds displayed an average yearly percentage increase of 5.81%. This agrees with the SSM plots in Figure 7, as both residents and migrants seemed to display slightly increasing trends.
+
+### Nest Site Trait
+
+Seven different types of nest sites were considered. Namely, aquatic, cavity, ground, reed, shrub, tree and diverse. The plots showing the abundance indices for each of the nest site traits and the SSM output applied to the combined counts of each group are displayed in Figure 9-15.
+
+```{r fig.cap="The first two plots are from the SSM output applied to the combined counts of the waterbirds that nest in an aquatic environment, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.", strip.white=TRUE, echo=FALSE, fig.pos='H'}
+
+p1 <- ggdraw() + draw_image("plots/aq_sum.png", scale = 0.9)
+p2 <- ggdraw() + draw_image("plots/aq_win.png", scale = 0.9)
+p3 <- ggdraw() + draw_image("plots/aq_lpi_CI.png", scale = 0.9)
+
+plot_grid(p1, p2, p3)
+```
+
+```{r fig.cap="The first two plots are from the SSM output applied to the combined counts of the waterbirds that nest in cavities, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.", strip.white=TRUE, echo=FALSE, fig.pos='H'}
+
+p1 <- ggdraw() + draw_image("plots/cav_sum.png", scale = 0.9)
+p2 <- ggdraw() + draw_image("plots/cav_win.png", scale = 0.9)
+p3 <- ggdraw() + draw_image("plots/cav_ind_CI.png", scale = 0.9)
+
+plot_grid(p1, p2, p3)
+
+```
+
+
+```{r nest_sites}
+
+# nestSite_trends <- function(traitsdf, countsdf, site, title){
+# 
+#   # test vars
+#   # traitsdf <- robertsDB
+#   # countsdf <- bp_counts
+#   # site <- 'Grass'
+#   # title <- 'a title'
+# 
+#   # extract species with certain trait
+#   Ids <- traitsdf[which(traitsdf$`Nest site`==site),]$SppRef
+#   t <- bp_counts[,Ids]
+# 
+#   # combine the counts
+#   combCounts <- apply(t, 1, sum, na.rm = F)
+#   combCounts <- as.data.frame(cbind(combCounts,
+#                                 'Season' = countsdf$Season,
+#                                 'Year' = countsdf$Year))
+# 
+#   #combCounts[combCounts==0] <- NA
+# 
+#   # run jags on them
+#   jagmod <- jags_analysis(combCounts)
+# 
+#   # run jags on each species in trait group
+#   trait_species <- list()
+# 
+#   for (i in 1:length(t)){
+#     trait_species[[i]] <- jags_analysis(as.data.frame(cbind(t[,i],
+#                                                       'Season' = countsdf$Season,
+#                                                       'Year' = countsdf$Year)))
+#   }
+# 
+#   # extract mu values
+#   mu <- lapply(trait_species, function(x){
+#     return(x$mean$mu_t)
+#   })
+# 
+#   # percentage change for each species in a group per year
+#   grp_change <- list()
+# 
+#   for(i in 1:length(mu)){
+#     perc_change <- c(0)
+# 
+#     for(x in 2:length(mu[[i]])){
+#       perc_change[x] = ((exp(mu[[i]][x]) - exp(mu[[i]][x-1])) / exp(mu[[i]][x-1]))*100
+#     }
+#       grp_change[[i]] <- perc_change
+#   }
+# 
+#   # convert list of yearly percentage changes to a df
+#   grp_change <- as.data.frame(grp_change)
+#   colnames(grp_change) <- colnames(t)
+# 
+#   # get average yearly percentage change for each year
+#   peryr.avg <- apply(grp_change, 1, mean)
+# 
+#   # place average yearly percentages in df and plot
+#   lpidf <- as.data.frame(cbind("lpi" = peryr.avg,
+#                                "Year" = unique(countsdf$Year)))
+# 
+#   return(list("jag.overall" = jagmod,
+#               "combCounts" = combCounts,
+#               "jag.mods" = trait_species,
+#               "ind" = lpidf))
+# }
+
+```
+
+```{r run_nest_func}
+
+#aq.nest <- nestSite_trends(robertsDB, bp_counts, 'Aquatic', 'Aquatic Nest Type')
+#cav.nest <- nestSite_trends(robertsDB, bp_counts, 'Cavity', 'Cavity Nest Type')
+#div.nest <- nestSite_trends(robertsDB, bp_counts, 'Diverse', 'Diverse Nest Type')
+#grass.nest <- nestSite_trends(robertsDB, bp_counts, 'Grass', 'Grass Nest Type')
+#ground.nest <- nestSite_trends(robertsDB, bp_counts, 'Ground', 'Ground Nest Type')
+#reed.nest <- nestSite_trends(robertsDB, bp_counts, 'Reed', 'Reed Nest Type')
+#shrub.nest <- nestSite_trends(robertsDB, bp_counts, 'Shrub', 'Shrub Nest Type')
+#tree.nest <- nestSite_trends(robertsDB, bp_counts, 'Tree', 'Tree Nest Type')
+
+```
+
+```{r plot_func}
+
+# plot_trait_grp <- function(lpidf, jagmod, counts, title){
+# 
+#   lpi.plot <- ggplot(lpidf, aes(x = Year, group = 1)) +
+#     #geom_ribbon(aes(ymin = lower, ymax = upper), fill = "gray80") +
+#     geom_line(aes(y = lpi, color = "grey1"), lwd = 1) +
+#     geom_hline(yintercept=0, linetype = 'dashed') +
+#     scale_x_continuous(breaks = seq(min(lpidf$Year), max(lpidf$Year), by = 1)) +
+#     labs(y = "modified LPI", x = "Years") +
+#     theme(axis.text.x = element_text(angle = 90),
+#           legend.position = 'none')
+# 
+#   #jagplot <- ts_jag_plot(jagmod, counts, title)
+# 
+#   # return(list('index' = lpi.plot,
+#   #             'jagplot' = jagplot))
+# 
+#   #return(jagplot)
+#   return(lpi.plot)
+# 
+# }
+# 
+# aq_plots <- plot_trait_grp(aq.nest$ind, aq.nest$jag.overall, aq.nest$combCounts, "Aquatic nest type")
+# aq_plots
+# aq_plots$winter
+# aq_plots$summer
+# aq_plots$jagplot
+# aq_plots$index
+
+# cav_plots <- plot_trait_grp(cav.nest$ind, cav.nest$jag.overall, cav.nest$combCounts, "Cavity nest type")
+# cav_plots
+# cav_plots$jagplot
+# cav_plots$index
+
+# div_plots <- plot_trait_grp(div.nest$ind, div.nest$jag.overall, div.nest$combCounts, "Diverse nest type")
+# div_plots$winter
+# div_plots$summer
+# div_plots$jagplot
+# div_plots$index
+
+# grass_plots <- plot_trait_grp(grass.nest$ind, grass.nest$jag.overall, grass.nest$combCounts, "Grass nest type")
+# grass_plots$winter
+# grass_plots$summer
+#grass_plots$jagplot
+#grass_plots$index
+
+# ground_plots <- plot_trait_grp(ground.nest$ind, ground.nest$jag.overall, ground.nest$combCounts, "Ground nest type")
+# ground_plots
+# ground_plots$jagplot
+# ground_plots$index
+
+# reed_plots <- plot_trait_grp(reed.nest$ind, reed.nest$jag.overall, reed.nest$combCounts, "Reed nest type")
+# reed_plots$winter
+# reed_plots$summer
+# reed_plots$jagplot
+# reed_plots$index
+
+# tree_plots <- plot_trait_grp(tree.nest$ind, tree.nest$jag.overall, tree.nest$combCounts, "Tree nest type")
+# tree_plots
+# tree_plots$jagplot
+# tree_plots$index
+
+# shrub_plots <- plot_trait_grp(shrub.nest$ind, shrub.nest$jag.overall, shrub.nest$combCounts, "Tree nest type")
+# shrub_plots
+# shrub_plots$jagplot
+# shrub_plots$index
+```
+
+```{r fig.cap="The first two plots are from the SSM output applied to the combined counts of the waterbirds that make their nests in diverse environments, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.", strip.white=TRUE, echo=FALSE, fig.pos='H'}
+
+p1 <- ggdraw() + draw_image("plots/div_sum.png", scale = 0.9)
+p2 <- ggdraw() + draw_image("plots/div_win.png", scale = 0.9)
+p3 <- ggdraw() + draw_image("plots/div_ind_CI.png", scale = 0.9)
+
+plot_grid(p1, p2, p3)
+
+```
+
+```{r fig.cap="The first two plots are from the SSM output applied to the combined counts of the waterbirds that nest by creating recessions in the ground, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.", strip.white=TRUE, echo=FALSE, fig.pos='H'}
+
+p1 <- ggdraw() + draw_image("plots/ground_sum.png", scale = 0.9)
+p2 <- ggdraw() + draw_image("plots/ground_win.png", scale = 0.9)
+p3 <- ggdraw() + draw_image("plots/ground_ind_CI.png", scale = 0.9)
+
+plot_grid(p1, p2, p3)
+
+```
+
+```{r fig.cap="The first two plots are from the SSM output applied to the combined counts of the waterbirds that make their nests amongst the reeds, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.", strip.white=TRUE, echo=FALSE, fig.pos='H'}
+
+p1 <- ggdraw() + draw_image("plots/reed_sum.png", scale = 0.9)
+p2 <- ggdraw() + draw_image("plots/reed_win.png", scale = 0.9)
+p3 <- ggdraw() + draw_image("plots/reed_ind_CI.png", scale = 0.9)
+
+plot_grid(p1, p2, p3)
+
+```
+
+
+```{r fig.cap="The first two plots are from the SSM output applied to the combined counts of the waterbirds that nest in shrubs, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.", strip.white=TRUE, echo=FALSE, fig.pos='H'}
+
+p1 <- ggdraw() + draw_image("plots/shrub_sum.png", scale = 0.9)
+p2 <- ggdraw() + draw_image("plots/shrub_win.png", scale = 0.9)
+p3 <- ggdraw() + draw_image("plots/shrub_lpi_CI.png", scale = 0.9)
+
+plot_grid(p1, p2, p3)
+
+```
+
+
+```{r fig.cap="The first two plots are from the SSM output applied to the combined counts of the waterbirds that nest in trees, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.", strip.white=TRUE, echo=FALSE, fig.pos='H'}
+
+p1 <- ggdraw() + draw_image("plots/tree_sum.png", scale = 0.9)
+p2 <- ggdraw() + draw_image("plots/tree_win.png", scale = 0.9)
+p3 <- ggdraw() + draw_image("plots/tree_ind_CI.png", scale = 0.9)
+
+plot_grid(p1, p2, p3)
+
+```
+
+All nest site traits show a positive yearly increase on average. The species with the aquatic or shrub nest type showed the greatest yearly percentage change with an average yearly increase of 16.86% and 12.70% respectively.
+
+The modified LPI displays a sharp increase in trend for waterbirds that nest in an aquatic environment and those that nest in trees, however, these sharp increases occur after the year 2015 and therefore are only based on one count value, thus deeming these sharp increases as unreliable.
+
+### Foraging Site Trait
+
+There are five different types of foraging sites used by the waterbirds in Barberspan. Some species use only one site type such as the wader species that often only forage in an aquatic environment. Other species show more diversity in their foraging such as the Cape Wagtail which forages on ground, off-ground, in mud and in aquatic environments. There are many different combinations of foraging sites across the waterbird species. The abundance index was thus applied to species groups based on how many different foraging sites they utilise. Species that use more foraging sites would be more flexible in their foraging habits compared to those who use just one or two. Most species only exhibited one foraging substratum but some exhibited 2, 3 or 4 different foraging substrata. Figure 17-20 show the abundance index for each foraging site group and their combined counts.
+
+```{r foraging_sub}
+
+# foraging_trends <- function(traitsdf, countsdf, numForagSub, title){
+# 
+#   # traitsdf = robertsDB
+#   # countsdf = bp_counts
+#   # numForagSub = 4
+#   # title = "a title"
+# 
+#   # extract species with certain trait
+#   Ids <- traitsdf[which(traitsdf$numForage==numForagSub),]$SppRef
+#   t <- bp_counts[,Ids]
+# 
+#   # combine the counts
+#   combCounts <- apply(t, 1, sum, na.rm = T)
+#   combCounts <- as.data.frame(cbind('counts' = combCounts,
+#                                     'Season' = countsdf$Season,
+#                                     'Year' = countsdf$Year))
+# 
+#   combCounts[combCounts==0] <- NA
+# 
+#   # run jags on them
+#   jagmod <- jags_analysis(combCounts)
+# 
+#   # run jags on each species in trait group
+#   trait_species <- list()
+# 
+#   for (i in 1:length(t)){
+#     trait_species[[i]] <- jags_analysis(as.data.frame(cbind(t[,i],
+#                                                             'Season' = countsdf$Season,
+#                                                             'Year' = countsdf$Year)))
+#   }
+# 
+#   # extract mu values
+#   mu <- lapply(trait_species, function(x){
+#     return(x$mean$mu_t)
+#   })
+# 
+#   # percentage change for each species in a group per year
+#   grp_change <- list()
+# 
+#   for(i in 1:length(mu)){
+#     perc_change <- c(0)
+# 
+#     for(x in 2:length(mu[[i]])){
+#       perc_change[x] = ((exp(mu[[i]][x]) - exp(mu[[i]][x-1])) / exp(mu[[i]][x-1]))*100
+#     }
+#       grp_change[[i]] <- perc_change
+#   }
+# 
+#   # convert list of yearly percentage changes to a df
+#   grp_change <- as.data.frame(grp_change)
+#   colnames(grp_change) <- colnames(t)
+# 
+#   # get average yearly percentage change for each year
+#   peryr.avg <- apply(grp_change, 1, mean)
+# 
+# 
+#   lpidf <- as.data.frame(cbind("lpi" = peryr.avg,
+#                                "Year" = unique(countsdf$Year)))
+# 
+#   return(list("jagmod" = jagmod,
+#               "combCounts" = combCounts,
+#               "jag.mods" = trait_species,
+#               "ind" = lpidf))
+# }
+
+```
+
+
+```{r apply_for_sub}
+#one.type <- foraging_trends(robertsDB, bp_counts, 1, "One Type of Foraging Substratum")
+# two.types <- foraging_trends(robertsDB, bp_counts, 2, "Two Types of Foraging Substratum")
+# three.types <- foraging_trends(robertsDB, bp_counts, 3, "Three Types of Foraging Substratum")
+# four.types <- foraging_trends(robertsDB, bp_counts, 4, "Four Types of Foraging Substratum")
+
+```
+
+```{r plot_forag}
+
+# one_type <- plot_trait_grp(one.type$ind, one.type$jagmod, one.type$combCounts,
+#                             "Species that utilise only one foraging site")
+# one_type
+# one_type$jagplot
+# one_type$index
+
+
+# two_type$jagplot
+# two_type$index
+
+# three_type <- plot_trait_grp(three.types$ind, three.types$jagmod, three.types$combCounts,
+#                             "Species that utilise three different foraging site")
+# three_type
+# three_type$jagplot
+# three_type$index
+
+# four_type <- plot_trait_grp(four.types$ind, four.types$jagmod, four.types$combCounts,
+#                             "Species that utilise four different foraging sites")
+# four_type
+# four_type$jagplot
+# four_type$index
+
+
+```
+
+```{r fig.cap="The first two plots are from the SSM output applied to the combined counts of the waterbirds that utilise only one foraging site, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.", strip.white=TRUE, echo=FALSE, fig.pos='H'}
+
+p1 <- ggdraw() + draw_image("plots/one_sum.png", scale = 0.9)
+p2 <- ggdraw() + draw_image("plots/one_win.png", scale = 0.9)
+p3 <- ggdraw() + draw_image("plots/one_ind_CI.png", scale = 0.9)
+
+plot_grid(p1, p2, p3)
+
+```
+
+```{r fig.cap="The first two plots are from the SSM output applied to the combined counts of the waterbirds that utilise two different foraging sites, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.", strip.white=TRUE, echo=FALSE, fig.pos='H'}
+
+p1 <- ggdraw() + draw_image("plots/two_sum.png", scale = 0.9)
+p2 <- ggdraw() + draw_image("plots/two_win.png", scale = 0.9)
+p3 <- ggdraw() + draw_image("plots/two_ind_CI.png", scale = 0.9)
+
+plot_grid(p1, p2, p3)
+
+```
+
+```{r fig.cap="The first two plots are from the SSM output applied to the combined counts of the waterbirds that utilise three different foraging sites, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.", strip.white=TRUE, echo=FALSE, fig.pos='H'}
+
+p1 <- ggdraw() + draw_image("plots/three_sum.png", scale = 0.9)
+p2 <- ggdraw() + draw_image("plots/three_win.png", scale = 0.9)
+p3 <- ggdraw() + draw_image("plots/three_ind_CI.png", scale = 0.9)
+
+plot_grid(p1, p2, p3)
+
+```
+
+```{r fig.cap="The first two plots are from the SSM output applied to the combined counts of the waterbirds that utilise four different foraging sites, separated into summer and winter estimates. The last plot is the average yearly percentage change across those waterbird species.", strip.white=TRUE, echo=FALSE, fig.pos='H'}
+
+p1 <- ggdraw() + draw_image("plots/four_sum.png", scale = 0.9)
+p2 <- ggdraw() + draw_image("plots/four_win.png", scale = 0.9)
+p3 <- ggdraw() + draw_image("plots/four_ind_CI.png", scale = 0.9)
+
+plot_grid(p1, p2, p3)
+
+```
+
+The average percentage change for each foraging substratum group is similar. There is no evidence to show that a waterbird species that forages in more locations, increases in population faster than waterbirds which utilize fewer foraging types. 
+
+Not all waterbird traits will be indicators that determine population dynamics but some are useful. It was useful to analyse the waterbirds separately based on migrant status as the fluctuations in the counts are different due to their migratory patterns. However, the number of foraging substrata and nest site does not seem to play an important role in describing population dynamics for the waterbirds.  
+
+## Biodiversity Indices
+
+The underlying level of the state-space model, once generated, are estimates of the underlying population of the analysed bird species. Biodiversity indices are formulated using these values. The indicators used here are the Simpson's index and the exponentiated Shannon's index. The Simpson's index provides a value representing the evenness of the ecosystem. The value of the Simpson's index varies from zero to one with zero being very little evenness and one being perfect evenness. The exponentiated Shannon's index gives the value of the effective number of species in an ecosystem. The Shannon's and Simpson's index are often used together. 
+
+The exponentiated Shannon's index and the Simpson's index were applied to the waterbird counts the same way as the modified LPI. Figure 20 displays the exponentiated Shannon's and Simpson's index each year for Barberspan.
+
+```{r jag_prep}
+
+# separate into resident and migrant
+# resid <- robertsDB %>%
+#   filter(Migrant=="n") %>%
+#   select(SppRef, `Common name`)
+# 
+# migid <- robertsDB %>%
+#   filter(Migrant=="y") %>%
+#   select(SppRef, `Common name`)
+# 
+# residents <- birdcnts[,resid$SppRef]
+# migrants <- birdcnts[,migid$SppRef]
+# 
+# colnames(residents) <- resid$`Common name`
+# colnames(migrants) <- migid$`Common name`
+# 
+# rescnts <- as.vector(apply(residents, 2, function(x){
+#   return(sum(!is.na(x)))
+# }))
+# 
+# 
+# migcnts <- as.vector(apply(migrants, 2, function(x){
+#   return(sum(!is.na(x)))
+# }))
+# 
+# residents <- residents[,rescnts>4]
+# migrants <- migrants[,migcnts>4]
+```
+
+
+```{r res_jags}
+# res.jags <- list()
+# 
+# for (i in 1:length(residents)){
+#   res.jags[[i]] <- jags_analysis(as.data.frame(cbind(residents[,i],
+#                                           'Season' = bp_counts$Season,
+#                                           'Year' = bp_counts$Year)))
+# }
+```
+
+
+```{r migrant_jags}
+# mig.jags <- list()
+# 
+# for (i in 1:length(migrants)){
+#   mig.jags[[i]] <- jags_analysis(as.data.frame(cbind(migrants[,i],
+#                                           'Season' = bp_counts$Season,
+#                                           'startDate' = bp_counts$Year)))
+# }
+```
+
+
+```{r shansimp}
+
+# # function to run shannon's and simpson's index calculations
+# shan.simp <- function(season, index, jagGroup){
+#   
+#   # iterate through migrant group and extract year i
+#   shan.mig.sum <- data.frame('lower' = 0, 'med' = 0, 'upper' = 0)
+# 
+#   # place all year i's together in one df
+#   for(i in 1:26){
+#     ayear <- lapply(jagGroup, function(x){
+#       
+#       if(season == "summer"){
+#         x$sims.list$mu_t[,i]
+#       }else{
+#         x$sims.list$mu_wt[,i]
+#       }
+#       
+#     })
+#   
+#     # run the diversity() function on the year i df
+#     # save upper, lower and median to a separate df
+#     shan.mig.sum <- rbind(shan.mig.sum,
+#                           quantile(diversity(exp(as.data.frame(ayear)),
+#                                              index = index),
+#                                    probs = c(0.025,0.5,0.975)))
+#     
+#     
+#   }
+#   
+#   if(index == 'shannon'){
+#     shan.mig.sum <- cbind(exp(shan.mig.sum[2:nrow(shan.mig.sum),]),
+#                       'Year' = unique(bp_counts$Year))
+#   }else{
+#     shan.mig.sum <- cbind(shan.mig.sum[2:nrow(shan.mig.sum),],
+#                       'Year' = unique(bp_counts$Year))
+#   }
+#   
+#   return(shan.mig.sum)
+# }
+# 
+# mshan.sumdf <- shan.simp('summer','shannon', mig.jags)
+# mshan.windf <- shan.simp('winter', 'shannon', mig.jags)
+# msimp.sumdf <- shan.simp('summer', 'simpson', mig.jags)
+# msimp.windf <- shan.simp('winter', 'simpson', mig.jags)
+# 
+# rshan.sumdf <- shan.simp('summer', 'shannon', res.jags)
+# rshan.windf <- shan.simp('winter', 'shannon', res.jags)
+# rsimp.sumdf <- shan.simp('summer', 'simpson', res.jags)
+# rsimp.windf <- shan.simp('winter', 'simpson', res.jags)
+
+
+
+```
+
+```{r plotInd}
+
+# plot the output
+
+# ggplot(mshan.sumdf, aes(x = Year)) +
+#   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "gray80") +
+#   geom_line(aes(y = med, color = 'red')) +
+#     scale_x_continuous(breaks = seq(min(mshan.sumdf$Year),
+#                                     max(mshan.sumdf$Year),
+#                                     by = 1)) +
+#     labs(title = 'Exponentiated shannon index for migrants in the summer',
+#          y = 'Index',
+#          x = 'Years') +
+#     theme(axis.text.x = element_text(angle = 90),
+#           legend.position = 'none')
+# 
+# ggplot(mshan.windf, aes(x = Year)) +
+#   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "gray80") +
+#   geom_line(aes(y = med, color = 'red')) +
+#     scale_x_continuous(breaks = seq(min(mshan.sumdf$Year),
+#                                     max(mshan.sumdf$Year),
+#                                     by = 1)) +
+#     labs(title = 'Exponentiated shannon index for migrants in the winter',
+#          y = 'Index',
+#          x = 'Years') +
+#     theme(axis.text.x = element_text(angle = 90),
+#           legend.position = 'none') 
+# 
+# ggplot(msimp.sumdf, aes(x = Year)) +
+#   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "gray80") +
+#   geom_line(aes(y = med, color = 'red')) +
+#     scale_x_continuous(breaks = seq(min(mshan.sumdf$Year),
+#                                     max(mshan.sumdf$Year),
+#                                     by = 1)) +
+#     labs(title = 'Simpson index for migrants in the summer',
+#          y = 'Index',
+#          x = 'Years') +
+#     theme(axis.text.x = element_text(angle = 90),
+#           legend.position = 'none') 
+# 
+# ggplot(msimp.windf, aes(x = Year)) +
+#   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "gray80") +
+#   geom_line(aes(y = med, color = 'red')) +
+#     scale_x_continuous(breaks = seq(min(mshan.sumdf$Year),
+#                                     max(mshan.sumdf$Year),
+#                                     by = 1)) +
+#     labs(title = 'Simpson index for migrants in the winter',
+#          y = 'Index',
+#          x = 'Years') +
+#     theme(axis.text.x = element_text(angle = 90),
+#           legend.position = 'none') 
+# 
+# 
+# ggplot(rshan.sumdf, aes(x = Year)) +
+#   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "gray80") +
+#   geom_line(aes(y = med, color = 'red')) +
+#     scale_x_continuous(breaks = seq(min(mshan.sumdf$Year),
+#                                     max(mshan.sumdf$Year),
+#                                     by = 1)) +
+#     labs(title = 'Exponentiated Shannon index for residents in the summer',
+#          y = 'Index',
+#          x = 'Years') +
+#     theme(axis.text.x = element_text(angle = 90),
+#           legend.position = 'none') 
+# 
+# ggplot(rshan.windf, aes(x = Year)) +
+#   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "gray80") +
+#   geom_line(aes(y = med, color = 'red')) +
+#     scale_x_continuous(breaks = seq(min(mshan.sumdf$Year),
+#                                     max(mshan.sumdf$Year),
+#                                     by = 1)) +
+#     labs(title = 'Exponentiated shannon index for residents in the winter',
+#          y = 'Index',
+#          x = 'Years') +
+#     theme(axis.text.x = element_text(angle = 90),
+#           legend.position = 'none')  
+# 
+# ggplot(rsimp.sumdf, aes(x = Year)) +
+#   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "gray80") +
+#   geom_line(aes(y = med, color = 'red')) +
+#     scale_x_continuous(breaks = seq(min(mshan.sumdf$Year),
+#                                     max(mshan.sumdf$Year),
+#                                     by = 1)) +
+#     labs(title = 'Simpson index for residents in the summer',
+#          y = 'Index',
+#          x = 'Years') +
+#     theme(axis.text.x = element_text(angle = 90),
+#           legend.position = 'none') 
+# 
+# ggplot(rsimp.windf, aes(x = Year)) +
+#   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "gray80") +
+#   geom_line(aes(y = med, color = 'red')) +
+#     scale_x_continuous(breaks = seq(min(mshan.sumdf$Year),
+#                                     max(mshan.sumdf$Year),
+#                                     by = 1)) +
+#     labs(title = 'Simpson index for residents in the winter',
+#          y = 'Index',
+#          x = 'Years') +
+#     theme(axis.text.x = element_text(angle = 90),
+#           legend.position = 'none') 
+
+
+
+```
+
+```{r, fig.cap="The Shannon and Simpson’s indices for resident and migrant species in winter and summer", strip.white=TRUE, echo=FALSE, fig.pos='H'}
+library(cowplot)
+library(ggplot2)
+
+p1 <- ggdraw() + draw_image("plots/res_shan_sum.png", scale = 0.9)
+p2 <- ggdraw() + draw_image("plots/res_simp_sum.png", scale = 0.9)
+p3 <- ggdraw() + draw_image("plots/res_shan_win.png", scale = 0.9)
+p4 <- ggdraw() + draw_image("plots/res_simp_win.png", scale = 0.9)
+p5 <- ggdraw() + draw_image("plots/mig_shan_sum.png", scale = 0.9)
+p6 <- ggdraw() + draw_image("plots/mig_simp_sum.png", scale = 0.9)
+p7 <- ggdraw() + draw_image("plots/mig_shan_win.png", scale = 0.9)
+p8 <- ggdraw() + draw_image("plots/mig_simp_win.png", scale = 0.9)
+
+plot_grid(p1, p2, p3, p4, p5, p6, p7, p8)
+```
+
+Due to the high levels of uncertainty of the index, it is difficult to state anything concrete based on these index values. However, it is evident that, on average, there is an overall decrease in the effective number of migratory waterbirds at Barberspan between 1993 and 2018 as displayed by the exponentiated Shannon's index. This is true for migrant waterbirds in the summer and in the winter. Given that migrant population has not changed significantly over time (as seen in figure 7), we can determine that the decrease in effective number of species is not an even decrease across the migrants at Barberspan. The Simpson's index, accordingly, suggests a trend toward lower evenness for the migrants at Barberspan over time.   
+
+The exponentiated Shannon's index shows a similar number of effective residents in both summer and winter compared to the migratory waterbirds. This is a reflection of the effect migration plays in the waterbird community in Barberspan. Resident waterbirds rarely move away from Barberspan while migrants show changes in effective number of species depending on the season. Interestingly, migratory waterbirds display a higher effective number of species in winter than in summer despite there being more migrants present at Barberspan in summer compared to winter. This measure is a result of there being a higher evenness amongst migrants in winter compared to summer (displayed by the Simpson's index). For example, 10 waterbird species in a community, each with a similar amount of individuals, will display a higher effective number of species compared to a community with the same number of species present but with one or two dominant species.
+
+
+
+
+
+
+
+
+
